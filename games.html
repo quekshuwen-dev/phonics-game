@@ -122,6 +122,15 @@ header h1{color:white;font-size:1.8rem;font-weight:900;text-shadow:2px 2px 0 rgb
   .blend-letter{width:58px;height:58px;font-size:1.6rem}
 }
 </style>
+<script>
+// Load parent's recorded sounds first, fall back to synthesised sounds
+(function(){
+  function tryLoad(src, cb){ const s=document.createElement('script'); s.src=src; s.onload=cb; s.onerror=cb; document.head.appendChild(s); }
+  tryLoad('my-sounds.js', function(){
+    if(typeof PHONEME_AUDIO==='undefined') tryLoad('phonemes.js', function(){});
+  });
+})();
+</script>
 </head>
 <body>
 
@@ -133,7 +142,8 @@ header h1{color:white;font-size:1.8rem;font-weight:900;text-shadow:2px 2px 0 rgb
 <div class="stars-bar">
   ⭐ Stars earned: <span class="star-count" id="totalStars">0</span>
   &nbsp;|&nbsp; 🏆 <span id="totalCorrect">0</span> correct
-  &nbsp;<a href="index.html" style="margin-left:auto;text-decoration:none;font-size:0.85rem;color:var(--purple)">← Back to Reading Buddy</a>
+  &nbsp;<a href="record-sounds.html" style="margin-left:auto;background:rgba(255,255,255,0.2);color:white;text-decoration:none;border-radius:12px;padding:7px 14px;font-weight:900;font-size:0.85rem;border:2px solid rgba(255,255,255,0.35)">🎙️ Record Sounds</a>
+  <a href="index.html" style="margin-left:auto;text-decoration:none;font-size:0.85rem;color:var(--purple)">← Back to Reading Buddy</a>
 </div>
 
 <!-- ══════ GAME MENU ══════ -->
