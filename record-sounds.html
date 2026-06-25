@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎙️ Record Phonics Sounds</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--sky:#5BC8F5;--yellow:#FFD93D;--coral:#FF6B6B;--mint:#6BCFA5;--purple:#C77DFF;--orange:#FF9A3C;--bg:#FFFDF7;--text:#2D2D2D}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,#FF6B6B,#C77DFF);padding:16px 20px;display:flex;align-items:center;gap:12px}
+header h1{color:white;font-size:1.6rem;font-weight:900;text-shadow:2px 2px 0 rgba(0,0,0,.15)}
+.links{margin-left:auto;display:flex;gap:8px}
+.link-btn{color:white;text-decoration:none;border:2px solid rgba(255,255,255,.4);border-radius:12px;padding:7px 14px;font-weight:900;font-size:.85rem;background:rgba(255,255,255,.15)}
+.main{max-width:700px;margin:0 auto;padding:20px}
+.intro{background:white;border-radius:20px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:24px;border-left:5px solid var(--purple)}
+.intro h2{font-size:1.1rem;margin-bottom:8px;color:var(--purple)}
+.intro p{font-size:.95rem;line-height:1.6;color:#555}
+.intro ol{margin:.8rem 0 0 1.2rem;font-size:.9rem;color:#444;line-height:1.8}
+/* EXPORT/IMPORT BAR */
+.action-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.btn{padding:12px 20px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:900;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .1s,box-shadow .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.1)}
+.btn-purple{background:var(--purple);color:white}
+.btn-mint{background:var(--mint);color:white}
+.btn-coral{background:var(--coral);color:white}
+.btn-yellow{background:var(--yellow);color:var(--text)}
+.btn-sky{background:var(--sky);color:white}
+.progress-wrap{background:#eee;border-radius:10px;height:16px;margin-bottom:6px}
+.progress-fill{background:linear-gradient(90deg,var(--coral),var(--purple));border-radius:10px;height:16px;transition:width .4s}
+.progress-label{font-size:.85rem;color:#888;font-weight:700;margin-bottom:20px}
+/* CATEGORY TABS */
+.cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.cat-tab{padding:9px 16px;border-radius:20px;border:2px solid #ddd;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;background:white;transition:.15s}
+.cat-tab.active{background:var(--purple);color:white;border-color:var(--purple)}
+/* PHONEME GRID */
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+.ph-card{background:white;border-radius:20px;padding:16px 14px;box-shadow:0 3px 14px rgba(0,0,0,.09);text-align:center;border:3px solid #eee;transition:.2s}
+.ph-card.recorded{border-color:var(--mint)}
+.ph-card .ph-symbol{font-size:2rem;font-weight:900;color:var(--purple);margin-bottom:2px}
+.ph-card .ph-name{font-size:.8rem;color:#888;font-weight:700;margin-bottom:10px}
+.ph-card .ph-example{font-size:.75rem;color:#aaa;margin-bottom:10px;font-style:italic}
+.record-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.rec-btn{padding:8px 12px;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:900;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);transition:.1s}
+.rec-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.1)}
+.rec-start{background:var(--coral);color:white}
+.rec-stop{background:#ef4444;color:white;display:none}
+.rec-play{background:var(--mint);color:white}
+.rec-clear{background:#f3f4f6;color:#666}
+.check{font-size:1.2rem;margin-bottom:6px;display:none}
+.ph-card.recorded .check{display:block}
+/* RECORDING PULSE */
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+.recording .rec-start{display:none}
+.recording .rec-stop{display:inline-block;animation:recPulse 1s infinite}
+/* MODAL for preview */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-box{background:white;border-radius:28px;padding:32px;max-width:420px;width:90%;text-align:center}
+.modal-box h2{font-size:1.4rem;font-weight:900;margin-bottom:12px}
+.modal-box p{color:#555;font-size:.95rem;line-height:1.6;margin-bottom:20px}
+/* STATUS TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:12px 24px;border-radius:20px;font-weight:700;font-size:.95rem;opacity:0;transition:opacity .3s;z-index:200;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:1.8rem">🎙️</span>
+  <h1>Record Phonics Sounds</h1>
+  <div class="links">
+    <a href="index.html" class="link-btn">📚 Phonics</a>
+    <a href="games.html" class="link-btn">🎮 Games</a>
+  </div>
+</header>
+
+<div class="main">
+  <div class="intro">
+    <h2>👋 Hi! Record your voice once — your child hears YOU every time!</h2>
+    <p>No app can make perfect phonics sounds — the only way to get it right is a real human voice. Record each sound below (takes about 10 minutes total). The sounds save to this browser permanently.</p>
+    <ol>
+      <li>Tap <strong>🔴 Record</strong> — say the phonics sound clearly (NOT the letter name!)</li>
+      <li>Tap <strong>⏹ Stop</strong> when done</li>
+      <li>Tap <strong>▶ Play</strong> to check it sounds right</li>
+      <li>When all done, tap <strong>💾 Export All Sounds</strong> to save a file</li>
+      <li>Put <code>my-sounds.js</code> in the same folder as the app on GitHub</li>
+    </ol>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn btn-purple" onclick="exportSounds()">💾 Export All Sounds</button>
+    <button class="btn btn-mint" onclick="document.getElementById('importFile').click()">📂 Import Saved Sounds</button>
+    <input type="file" id="importFile" accept=".js,.json" style="display:none" onchange="importSounds(this)">
+    <button class="btn btn-yellow" onclick="testAll()">▶ Play All in Order</button>
+    <button class="btn btn-coral" onclick="clearAll()">🗑 Clear All</button>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 44 sounds recorded</div>
+
+  <div class="cat-tabs">
+    <button class="cat-tab active" onclick="showCat('all',this)">All</button>
+    <button class="cat-tab" onclick="showCat('vowel',this)">🔴 Vowels</button>
+    <button class="cat-tab" onclick="showCat('consonant',this)">🔵 Consonants</button>
+    <button class="cat-tab" onclick="showCat('digraph',this)">🟣 Digraphs</button>
+    <button class="cat-tab" onclick="showCat('blend',this)">🟠 Blends</button>
+    <button class="cat-tab" onclick="showCat('voweldig',this)">🟡 Vowel Pairs</button>
+  </div>
+
+  <div class="ph-grid" id="phGrid"></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2 id="modalTitle">Export Sounds</h2>
+    <p id="modalMsg"></p>
+    <button class="btn btn-purple" onclick="document.getElementById('modal').classList.remove('open')">OK</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ALL 44+ PHONEMES ──
+const ALL_PHONEMES = [
+  // SHORT VOWELS
+  {key:'a',  symbol:'a',  name:'Short A',  example:'"a" as in cat 🐱',   cat:'vowel',     tip:'Open your mouth wide — "AH" (not "ay")'},
+  {key:'e',  symbol:'e',  name:'Short E',  example:'"e" as in bed 🛏️',   cat:'vowel',     tip:'"EH" — like you\'re surprised: "eh?"'},
+  {key:'i',  symbol:'i',  name:'Short I',  example:'"i" as in sit 🪑',   cat:'vowel',     tip:'"IH" — short and clipped, not "eye"'},
+  {key:'o',  symbol:'o',  name:'Short O',  example:'"o" as in hot 🔥',   cat:'vowel',     tip:'"OH" — round lips, short burst'},
+  {key:'u',  symbol:'u',  name:'Short U',  example:'"u" as in cup ☕',   cat:'vowel',     tip:'"UH" — like "uh oh!" — very short'},
+  // LONG VOWELS
+  {key:'A',  symbol:'ā',  name:'Long A',   example:'"ā" as in cake 🎂',  cat:'vowel',     tip:'"AY" — say your name "A"'},
+  {key:'E',  symbol:'ē',  name:'Long E',   example:'"ē" as in tree 🌳',  cat:'vowel',     tip:'"EE" — smile and say "ee"'},
+  {key:'I',  symbol:'ī',  name:'Long I',   example:'"ī" as in kite 🪁',  cat:'vowel',     tip:'"EYE" — say the word "I"'},
+  {key:'O',  symbol:'ō',  name:'Long O',   example:'"ō" as in boat ⛵',  cat:'vowel',     tip:'"OH" — long and round'},
+  {key:'U',  symbol:'ū',  name:'Long U',   example:'"ū" as in moon 🌙',  cat:'vowel',     tip:'"OO" — lips in circle'},
+  // CONSONANTS — phonics sounds, NOT letter names!
+  {key:'b',  symbol:'b',  name:'/b/',  example:'"b" as in ball ⚽',   cat:'consonant', tip:'Short POP — "b" not "buh-uh". Close lips, burst air'},
+  {key:'c',  symbol:'c',  name:'/k/',  example:'"c" as in cat 🐱',   cat:'consonant', tip:'Short click at back of throat — "k" not "kuh-uh"'},
+  {key:'d',  symbol:'d',  name:'/d/',  example:'"d" as in dog 🐶',   cat:'consonant', tip:'Short "d" — tongue tip up, quick burst'},
+  {key:'f',  symbol:'f',  name:'/f/',  example:'"f" as in fish 🐟',  cat:'consonant', tip:'"fff" — teeth on lip, blow air'},
+  {key:'g',  symbol:'g',  name:'/g/',  example:'"g" as in girl 👧',  cat:'consonant', tip:'Short "g" at back of throat, not "guh-uh"'},
+  {key:'h',  symbol:'h',  name:'/h/',  example:'"h" as in hat 🎩',   cat:'consonant', tip:'Breathy "hh" — like fogging a mirror'},
+  {key:'j',  symbol:'j',  name:'/j/',  example:'"j" as in jam 🍓',   cat:'consonant', tip:'"j" — short, not "juh-uh"'},
+  {key:'k',  symbol:'k',  name:'/k/',  example:'"k" as in kite 🪁',  cat:'consonant', tip:'Click at back of throat, no added vowel'},
+  {key:'l',  symbol:'l',  name:'/l/',  example:'"l" as in leg 🦵',   cat:'consonant', tip:'"lll" — tongue on ridge behind top teeth, hum'},
+  {key:'m',  symbol:'m',  name:'/m/',  example:'"m" as in map 🗺️',  cat:'consonant', tip:'"mmm" — lips together, hum through nose'},
+  {key:'n',  symbol:'n',  name:'/n/',  example:'"n" as in net 🏸',   cat:'consonant', tip:'"nnn" — tongue up, hum through nose'},
+  {key:'p',  symbol:'p',  name:'/p/',  example:'"p" as in pig 🐷',   cat:'consonant', tip:'Short puff of air — lips together, pop. No vowel!'},
+  {key:'r',  symbol:'r',  name:'/r/',  example:'"r" as in run 🏃',   cat:'consonant', tip:'"rrr" — curl tongue back slightly'},
+  {key:'s',  symbol:'s',  name:'/s/',  example:'"s" as in sun ☀️',   cat:'consonant', tip:'"sss" — hissing snake sound'},
+  {key:'t',  symbol:'t',  name:'/t/',  example:'"t" as in top 🎵',   cat:'consonant', tip:'Short click — tongue tip behind teeth, quick. No "tuh-uh"'},
+  {key:'v',  symbol:'v',  name:'/v/',  example:'"v" as in van 🚐',   cat:'consonant', tip:'"vvv" — like /f/ but voice it (vibrates)'},
+  {key:'w',  symbol:'w',  name:'/w/',  example:'"w" as in web 🕸️',  cat:'consonant', tip:'"wuh" — round lips, breathe out'},
+  {key:'x',  symbol:'x',  name:'/ks/', example:'"x" as in fox 🦊',   cat:'consonant', tip:'"ks" — /k/ then /s/ together fast'},
+  {key:'y',  symbol:'y',  name:'/y/',  example:'"y" as in yes ✅',   cat:'consonant', tip:'"y" — like beginning of "yes", short'},
+  {key:'z',  symbol:'z',  name:'/z/',  example:'"z" as in zip 🤐',   cat:'consonant', tip:'"zzz" — like /s/ but voice it (vibrates)'},
+  // DIGRAPHS
+  {key:'sh', symbol:'sh', name:'/sh/', example:'shop 🛍️ ship 🚢',    cat:'digraph',   tip:'"shhh" — finger to lips, quiet sound'},
+  {key:'ch', symbol:'ch', name:'/ch/', example:'chip 🍟 chair 🪑',    cat:'digraph',   tip:'"ch" — like a sneeze start, short burst'},
+  {key:'th', symbol:'th', name:'/th/', example:'that 👉 thin 🌿',     cat:'digraph',   tip:'Tongue BETWEEN teeth, blow — "th"'},
+  {key:'ph', symbol:'ph', name:'/f/',  example:'phone 📱',             cat:'digraph',   tip:'Same as /f/ — "fff"'},
+  {key:'wh', symbol:'wh', name:'/w/',  example:'when ❓ white ⬜',     cat:'digraph',   tip:'Same as /w/ — "wuh"'},
+  {key:'ng', symbol:'ng', name:'/ng/', example:'ring 💍 sing 🎵',      cat:'digraph',   tip:'"ng" — back of throat hum, no /g/ at end'},
+  {key:'ck', symbol:'ck', name:'/k/',  example:'duck 🦆 clock ⏰',     cat:'digraph',   tip:'Same as /k/ — back of throat click'},
+  // CONSONANT BLENDS
+  {key:'bl', symbol:'bl', name:'bl',   example:'blue 🔵 black ⬛',     cat:'blend',     tip:'/b/ then /l/ run together — "bl"'},
+  {key:'cl', symbol:'cl', name:'cl',   example:'clap 👏 cloud ☁️',    cat:'blend',     tip:'/k/ then /l/ — "cl"'},
+  {key:'fl', symbol:'fl', name:'fl',   example:'flag 🚩 fly 🪰',       cat:'blend',     tip:'/f/ then /l/ — "fl"'},
+  {key:'pl', symbol:'pl', name:'pl',   example:'play 🎮 plan 📋',      cat:'blend',     tip:'/p/ then /l/ — "pl"'},
+  {key:'br', symbol:'br', name:'br',   example:'bread 🍞 brown 🟫',    cat:'blend',     tip:'/b/ then /r/ — "br"'},
+  {key:'cr', symbol:'cr', name:'cr',   example:'crab 🦀 cross ✝️',     cat:'blend',     tip:'/k/ then /r/ — "cr"'},
+  {key:'dr', symbol:'dr', name:'dr',   example:'drum 🥁 drop 💧',      cat:'blend',     tip:'/d/ then /r/ — "dr"'},
+  {key:'fr', symbol:'fr', name:'fr',   example:'frog 🐸 fruit 🍓',     cat:'blend',     tip:'/f/ then /r/ — "fr"'},
+  {key:'gr', symbol:'gr', name:'gr',   example:'green 🟢 grape 🍇',    cat:'blend',     tip:'/g/ then /r/ — "gr"'},
+  {key:'pr', symbol:'pr', name:'pr',   example:'pray 🙏 prize 🏆',     cat:'blend',     tip:'/p/ then /r/ — "pr"'},
+  {key:'tr', symbol:'tr', name:'tr',   example:'tree 🌳 train 🚂',     cat:'blend',     tip:'/t/ then /r/ — "tr"'},
+  {key:'sn', symbol:'sn', name:'sn',   example:'snap 📸 snake 🐍',     cat:'blend',     tip:'/s/ then /n/ — "sn"'},
+  {key:'sp', symbol:'sp', name:'sp',   example:'spin 🌀 spot 🔵',      cat:'blend',     tip:'/s/ then /p/ — "sp"'},
+  {key:'st', symbol:'st', name:'st',   example:'star ⭐ step 👣',      cat:'blend',     tip:'/s/ then /t/ — "st"'},
+  {key:'sw', symbol:'sw', name:'sw',   example:'swim 🏊 sweet 🍬',     cat:'blend',     tip:'/s/ then /w/ — "sw"'},
+  // VOWEL DIGRAPHS (pairs)
+  {key:'ai', symbol:'ai', name:'/ay/', example:'rain 🌧️ tail 🐈',     cat:'voweldig',  tip:'"AY" — same as long a'},
+  {key:'ea', symbol:'ea', name:'/ee/', example:'eat 🍽️ bean 🫘',      cat:'voweldig',  tip:'"EE" — same as long e'},
+  {key:'ee', symbol:'ee', name:'/ee/', example:'tree 🌳 bee 🐝',       cat:'voweldig',  tip:'"EE" — hold it long'},
+  {key:'oa', symbol:'oa', name:'/oh/', example:'boat ⛵ road 🛣️',     cat:'voweldig',  tip:'"OH" — same as long o'},
+  {key:'oo', symbol:'oo', name:'/oo/', example:'moon 🌙 book 📚',      cat:'voweldig',  tip:'"OO" — round lips tightly'},
+  {key:'ou', symbol:'ou', name:'/ow/', example:'out 🚪 cloud ☁️',     cat:'voweldig',  tip:'"OW" — like "ouch!" start'},
+  {key:'oi', symbol:'oi', name:'/oy/', example:'coin 🪙 oil 🛢️',      cat:'voweldig',  tip:'"OY" — like "boy"'},
+  {key:'ar', symbol:'ar', name:'/ar/', example:'car 🚗 star ⭐',       cat:'voweldig',  tip:'"AHR" — open mouth wide, r at end'},
+  {key:'or', symbol:'or', name:'/or/', example:'corn 🌽 for 🎁',       cat:'voweldig',  tip:'"OR" — round lips, then r'},
+  {key:'er', symbol:'er', name:'/er/', example:'her 👩 fern 🌿',       cat:'voweldig',  tip:'"ER" — like "uhh" with an r'},
+];
+
+// ── STATE ──
+const recordings = {}; // key → base64 dataURL string
+let mediaRecorder = null;
+let chunks = [];
+let currentRecordingKey = null;
+let currentCat = 'all';
+
+// ── LOAD SAVED ──
+function loadSaved(){
+  try{
+    const saved = localStorage.getItem('phonics_recordings');
+    if(saved){ const d=JSON.parse(saved); Object.assign(recordings,d); }
+  }catch(e){}
+  // Also load from my-sounds.js if it was exported and imported
+}
+
+function saveToBrowser(){
+  try{ localStorage.setItem('phonics_recordings', JSON.stringify(recordings)); }catch(e){
+    showToast('⚠️ Browser storage full — please Export to file instead');
+  }
+}
+
+// ── RENDER ──
+function renderGrid(){
+  const grid = document.getElementById('phGrid');
+  const filtered = currentCat==='all' ? ALL_PHONEMES : ALL_PHONEMES.filter(p=>p.cat===currentCat);
+  grid.innerHTML = filtered.map(p=>`
+    <div class="ph-card ${recordings[p.key]?'recorded':''}" id="card_${p.key}">
+      <div class="check">✅</div>
+      <div class="ph-symbol">${p.symbol}</div>
+      <div class="ph-name">${p.name}</div>
+      <div class="ph-example">${p.example}</div>
+      <div style="font-size:.7rem;color:#bbb;margin-bottom:8px;line-height:1.3;font-style:italic">${p.tip}</div>
+      <div class="record-row" id="row_${p.key}">
+        <button class="rec-btn rec-start" onclick="startRec('${p.key}')">🔴 Record</button>
+        <button class="rec-btn rec-stop" onclick="stopRec()">⏹ Stop</button>
+        ${recordings[p.key]?`<button class="rec-btn rec-play" onclick="playRec('${p.key}')">▶ Play</button>`:''}
+        ${recordings[p.key]?`<button class="rec-btn rec-clear" onclick="clearRec('${p.key}')">✕</button>`:''}
+      </div>
+    </div>
+  `).join('');
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = ALL_PHONEMES.length;
+  const done = ALL_PHONEMES.filter(p=>recordings[p.key]).length;
+  document.getElementById('progressFill').style.width=(done/total*100)+'%';
+  document.getElementById('progressLabel').textContent=`${done} / ${total} sounds recorded`;
+}
+
+function showCat(cat, btn){
+  currentCat=cat;
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+// ── RECORDING ──
+async function startRec(key){
+  if(mediaRecorder && mediaRecorder.state==='recording') stopRec();
+  currentRecordingKey = key;
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    chunks=[];
+    // Prefer webm/opus for smaller files, fallback to whatever's supported
+    const mime = ['audio/webm;codecs=opus','audio/webm','audio/ogg','audio/mp4','audio/aac']
+      .find(t=>MediaRecorder.isTypeSupported(t)) || '';
+    mediaRecorder = new MediaRecorder(stream, mime?{mimeType:mime}:{});
+    mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
+    mediaRecorder.onstop = async()=>{
+      const blob = new Blob(chunks, {type: mediaRecorder.mimeType||'audio/webm'});
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        recordings[key] = reader.result; // base64 dataURL
+        saveToBrowser();
+        updateCard(key);
+        stream.getTracks().forEach(t=>t.stop());
+        showToast('✅ Recorded!');
+      };
+      reader.readAsDataURL(blob);
+    };
+    mediaRecorder.start();
+    // Update card UI
+    const card = document.getElementById('card_'+key);
+    if(card) card.classList.add('recording');
+    const row = document.getElementById('row_'+key);
+    if(row){
+      row.querySelectorAll('.rec-start').forEach(b=>b.style.display='none');
+      row.querySelectorAll('.rec-stop').forEach(b=>b.style.display='inline-block');
+    }
+    showToast('🔴 Recording... tap Stop when done');
+  }catch(e){
+    showToast('❌ Cannot access microphone — please allow mic permission');
+  }
+}
+
+function stopRec(){
+  if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop();
+  // Remove recording class from all cards
+  document.querySelectorAll('.ph-card').forEach(c=>c.classList.remove('recording'));
+}
+
+function updateCard(key){
+  const card = document.getElementById('card_'+key);
+  const row = document.getElementById('row_'+key);
+  if(!card||!row) return;
+  card.classList.add('recorded');
+  card.classList.remove('recording');
+  card.querySelector('.check').style.display='block';
+  row.innerHTML=`
+    <button class="rec-btn rec-start" onclick="startRec('${key}')">🔴 Re-record</button>
+    <button class="rec-btn rec-stop" onclick="stopRec()" style="display:none">⏹ Stop</button>
+    <button class="rec-btn rec-play" onclick="playRec('${key}')">▶ Play</button>
+    <button class="rec-btn rec-clear" onclick="clearRec('${key}')">✕</button>
+  `;
+  updateProgress();
+}
+
+function playRec(key){
+  const src = recordings[key];
+  if(!src){ showToast('No recording yet'); return; }
+  const audio = new Audio(src);
+  audio.play();
+}
+
+function clearRec(key){
+  delete recordings[key];
+  saveToBrowser();
+  const card = document.getElementById('card_'+key);
+  if(card){
+    card.classList.remove('recorded');
+    card.querySelector('.check').style.display='none';
+    const row = document.getElementById('row_'+key);
+    if(row) row.innerHTML=`
+      <button class="rec-btn rec-start" onclick="startRec('${key}')">🔴 Record</button>
+      <button class="rec-btn rec-stop" onclick="stopRec()" style="display:none">⏹ Stop</button>
+    `;
+  }
+  updateProgress();
+  showToast('Cleared');
+}
+
+// ── EXPORT ──
+function exportSounds(){
+  const count = Object.keys(recordings).length;
+  if(count===0){ showToast('No recordings yet!'); return; }
+  // Export as JS file that both games.html and index.html can load
+  const js = `// Reading Buddy — Parent Phonics Recordings\n// Recorded: ${new Date().toLocaleDateString()}\n// ${count} sounds recorded\nconst PHONEME_AUDIO = ${JSON.stringify(recordings, null, 0)};\n`;
+  const blob = new Blob([js], {type:'application/javascript'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'my-sounds.js';
+  a.click();
+  showModal('💾 Exported!',
+    `Your ${count} recordings have been saved as <strong>my-sounds.js</strong>.\n\nUpload this file to your GitHub repository in the same folder as index.html, games.html.\n\nThe app will automatically use your voice instead of the default sounds!`);
+}
+
+function importSounds(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      // Extract JSON from JS file
+      let text = e.target.result;
+      const match = text.match(/const PHONEME_AUDIO\s*=\s*(\{[\s\S]*\})/);
+      if(match){
+        const data = JSON.parse(match[1]);
+        Object.assign(recordings, data);
+        saveToBrowser();
+        renderGrid();
+        showToast(`✅ Imported ${Object.keys(data).length} sounds!`);
+      } else {
+        // Try raw JSON
+        const data = JSON.parse(text);
+        Object.assign(recordings, data);
+        saveToBrowser();
+        renderGrid();
+        showToast(`✅ Imported!`);
+      }
+    }catch(err){ showToast('❌ Could not read file'); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+// ── TEST ALL ──
+function testAll(){
+  const keys = ALL_PHONEMES.filter(p=>recordings[p.key]).map(p=>p.key);
+  if(keys.length===0){ showToast('No recordings yet!'); return; }
+  let i=0;
+  function next(){
+    if(i>=keys.length) return;
+    const key=keys[i++];
+    const audio=new Audio(recordings[key]);
+    audio.onended=()=>setTimeout(next,500);
+    audio.play();
+    showToast('🔊 Playing: /'+key+'/');
+  }
+  next();
+}
+
+// ── CLEAR ALL ──
+function clearAll(){
+  if(!confirm('Clear ALL recordings? This cannot be undone.')) return;
+  Object.keys(recordings).forEach(k=>delete recordings[k]);
+  saveToBrowser();
+  renderGrid();
+  showToast('All cleared');
+}
+
+// ── MODAL ──
+function showModal(title, msg){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalMsg').innerHTML=msg.replace(/\n/g,'<br>');
+  document.getElementById('modal').classList.add('open');
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+loadSaved();
+renderGrid();
+</script>
+</body>
+</html>
