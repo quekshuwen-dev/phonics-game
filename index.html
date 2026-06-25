@@ -137,13 +137,22 @@
     nav button { font-size:0.78rem; min-width:78px; }
   }
 </style>
-<script src="phonemes.js"></script>
+<script>
+// Load parent's recorded sounds first, fall back to synthesised sounds
+(function(){
+  function tryLoad(src, cb){ const s=document.createElement('script'); s.src=src; s.onload=cb; s.onerror=cb; document.head.appendChild(s); }
+  tryLoad('my-sounds.js', function(){
+    if(typeof PHONEME_AUDIO==='undefined') tryLoad('phonemes.js', function(){});
+  });
+})();
+</script>
 </head>
 <body>
 
 <header>
   <span class="star">⭐</span>
   <h1>Reading Buddy</h1>
+  <a href="record-sounds.html" style="margin-left:auto;background:rgba(255,255,255,0.25);color:white;text-decoration:none;border-radius:14px;padding:8px 14px;font-weight:900;font-size:0.85rem;border:2px solid rgba(255,255,255,0.4)">🎙️ Record</a>
   <a href="games.html" style="margin-left:auto;background:rgba(255,255,255,0.25);color:white;text-decoration:none;border-radius:14px;padding:8px 16px;font-weight:900;font-size:0.95rem;border:2px solid rgba(255,255,255,0.4)">🎮 Games</a>
 </header>
 
