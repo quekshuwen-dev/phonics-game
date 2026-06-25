@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Buddy 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #5BC8F5;
+    --yellow: #FFD93D;
+    --coral: #FF6B6B;
+    --mint: #6BCFA5;
+    --purple: #C77DFF;
+    --orange: #FF9A3C;
+    --bg: #FFFDF7;
+    --text: #2D2D2D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  header { background: linear-gradient(135deg, #5BC8F5 0%, #C77DFF 100%); padding: 18px 24px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  header h1 { color: white; font-size: 2rem; font-weight: 900; text-shadow: 2px 2px 0 rgba(0,0,0,0.15); }
+  .star { font-size: 2rem; animation: spin 3s linear infinite; }
+  @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+  nav { display: flex; background: white; border-bottom: 3px solid #eee; overflow-x: auto; }
+  nav button { flex: 1; min-width: 100px; padding: 14px 8px; border: none; background: white; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; color: #888; border-bottom: 4px solid transparent; transition: all 0.2s; }
+  nav button.active { color: var(--purple); border-bottom-color: var(--purple); background: #FAF5FF; }
+  nav button:hover:not(.active) { background: #f5f5f5; color: var(--text); }
+
+  main { padding: 24px 20px; max-width: 700px; margin: 0 auto; }
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .section-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+
+  /* LETTER BLOCKS */
+  .letter-block {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 60px; height: 64px; padding: 0 10px;
+    border-radius: 14px; font-size: 1.8rem; font-weight: 900; color: white;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.22); user-select: none; margin: 4px;
+    text-transform: uppercase; border: none; position: relative;
+  }
+  .letter-block.vowel     { background: var(--coral);  box-shadow: 0 6px 0 #c0392b; }
+  .letter-block.consonant { background: var(--sky);    box-shadow: 0 6px 0 #2980b9; }
+  .letter-block.digraph   { background: #a855f7;       box-shadow: 0 6px 0 #7c3aed; min-width:80px; font-size:1.5rem; }
+  .letter-block.vowel-digraph { background: #f97316;   box-shadow: 0 6px 0 #c2410c; min-width:80px; font-size:1.5rem; }
+  .letter-block.silent    { background: #9ca3af;       box-shadow: 0 6px 0 #6b7280; opacity:0.7; }
+  @keyframes blockBounce { 0%{transform:translateY(0) scale(1)} 30%{transform:translateY(-14px) scale(1.18)} 60%{transform:translateY(-4px) scale(1.06)} 100%{transform:translateY(0) scale(1)} }
+  .letter-block.bouncing { animation: blockBounce 0.5s ease; }
+  .phoneme-label { position:absolute; bottom:-22px; left:50%; transform:translateX(-50%); font-size:0.65rem; color:#555; font-weight:700; white-space:nowrap; background:#fff; padding:1px 5px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+
+  /* LEGEND */
+  .legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; font-size:0.82rem; font-weight:700; }
+  .legend-item { display:flex; align-items:center; gap:5px; }
+  .legend-dot { width:16px; height:16px; border-radius:5px; }
+
+  /* INPUTS & BUTTONS */
+  .word-input-row { display:flex; gap:10px; margin-bottom:20px; }
+  .word-input-row input { flex:1; padding:14px 18px; border:3px solid #ddd; border-radius:16px; font-size:1.4rem; font-family:'Nunito',sans-serif; font-weight:700; outline:none; transition:border-color 0.2s; }
+  .word-input-row input:focus { border-color:var(--purple); }
+  .btn { padding:13px 20px; border:none; border-radius:14px; font-family:'Nunito',sans-serif; font-size:1rem; font-weight:900; cursor:pointer; transition:transform 0.1s, box-shadow 0.1s; box-shadow:0 5px 0 rgba(0,0,0,0.18); }
+  .btn:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,0.12); }
+  .btn-purple { background:var(--purple); color:white; }
+  .btn-yellow { background:var(--yellow); color:var(--text); }
+  .btn-mint   { background:var(--mint);   color:white; }
+  .btn-coral  { background:var(--coral);  color:white; }
+  .btn-sky    { background:var(--sky);    color:white; }
+  .btn-orange { background:var(--orange); color:white; }
+
+  .blocks-row { display:flex; flex-wrap:wrap; gap:4px; align-items:flex-start; min-height:100px; background:#f0f0f0; border-radius:20px; padding:16px 14px 32px; margin-bottom:20px; }
+  .blocks-placeholder { color:#aaa; font-weight:700; padding-top:10px; }
+
+  /* PHONICS BREAKDOWN */
+  .phonics-breakdown { background:white; border-radius:20px; padding:18px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:16px; }
+  .phonics-breakdown h3 { font-size:0.95rem; color:#888; margin-bottom:12px; }
+  .syllable-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .syllable-chip { background:var(--yellow); color:var(--text); border-radius:30px; padding:9px 20px; font-size:1.2rem; font-weight:900; cursor:pointer; border:none; font-family:'Nunito',sans-serif; box-shadow:0 3px 0 rgba(0,0,0,0.15); transition:transform 0.1s; }
+  .syllable-chip:active { transform:translateY(2px); }
+  .syllable-sep { font-size:1.5rem; color:#ccc; font-weight:900; }
+  .action-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+
+  /* PHONEME SEQUENCE */
+  .phoneme-seq { background:#fff; border-radius:20px; padding:16px 18px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:16px; }
+  .phoneme-seq h3 { font-size:0.95rem; color:#888; margin-bottom:10px; }
+  .phoneme-seq-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .phoneme-chip { background:#EDE9FE; color:#7c3aed; border:2px solid #c4b5fd; border-radius:12px; padding:8px 14px; font-size:1.1rem; font-weight:900; cursor:pointer; font-family:'Nunito',sans-serif; transition:transform 0.1s; }
+  .phoneme-chip:active { transform:scale(1.1); }
+  .phoneme-plus { font-size:1.3rem; color:#ccc; font-weight:900; }
+
+  /* SPEAKING */
+  .speaking-indicator { display:inline-flex; align-items:center; gap:6px; background:var(--mint); color:white; border-radius:20px; padding:6px 16px; font-size:0.9rem; font-weight:700; margin-top:10px; opacity:0; transition:opacity 0.3s; }
+  .speaking-indicator.visible { opacity:1; }
+  .speaking-dot { width:8px; height:8px; border-radius:50%; background:white; animation:blink 0.6s infinite alternate; }
+  @keyframes blink { from{opacity:0.3} to{opacity:1} }
+
+  /* QUICK WORDS */
+  .quick-words { display:flex; flex-wrap:wrap; gap:8px; }
+
+  /* SIGHT WORDS */
+  .flashcard { background:white; border-radius:28px; box-shadow:0 8px 30px rgba(0,0,0,0.12); padding:40px 30px; text-align:center; margin-bottom:20px; position:relative; min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .flashcard .big-word { font-size:4rem; font-weight:900; color:var(--purple); letter-spacing:6px; margin-bottom:12px; }
+  .flashcard .word-emoji { font-size:3rem; margin-bottom:8px; }
+  .flashcard .word-sentence { font-size:1.1rem; color:#666; font-style:italic; max-width:300px; }
+  .flashcard .category-badge { position:absolute; top:16px; right:16px; background:var(--yellow); border-radius:20px; padding:4px 14px; font-size:0.8rem; font-weight:700; }
+  .card-nav { display:flex; gap:12px; justify-content:center; margin-bottom:16px; }
+  .progress-bar-wrap { background:#eee; border-radius:10px; height:14px; margin-bottom:20px; }
+  .progress-bar-fill { background:linear-gradient(90deg, var(--mint), var(--sky)); border-radius:10px; height:14px; transition:width 0.4s; }
+
+  /* LISTEN */
+  .listen-card { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:28px; padding:36px 28px; text-align:center; color:white; margin-bottom:20px; }
+  .listen-card .mic-icon { font-size:4rem; margin-bottom:10px; cursor:pointer; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+  .listen-card h2 { font-size:1.6rem; font-weight:900; margin-bottom:8px; }
+  .listen-card p { opacity:0.85; font-size:1rem; }
+  .word-result-box { background:white; border-radius:20px; padding:24px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,0.1); margin-bottom:16px; display:none; }
+  .word-result-box.visible { display:block; }
+  .word-result-box .heard-word { font-size:2.5rem; font-weight:900; color:var(--purple); }
+  .word-result-box .heard-label { font-size:0.9rem; color:#aaa; margin-bottom:8px; }
+
+  /* MEANING */
+  .meaning-card { background:white; border-radius:24px; box-shadow:0 4px 20px rgba(0,0,0,0.1); overflow:hidden; margin-bottom:20px; }
+  .meaning-card-header { padding:20px 24px; display:flex; align-items:center; gap:16px; }
+  .meaning-emoji { font-size:3.5rem; }
+  .meaning-word { font-size:2.2rem; font-weight:900; color:var(--purple); }
+  .meaning-body { padding:0 24px 24px; }
+  .meaning-def { font-size:1.1rem; line-height:1.7; color:#444; margin-bottom:12px; }
+  .meaning-example { background:#FFF9E6; border-left:4px solid var(--yellow); border-radius:0 12px 12px 0; padding:12px 16px; font-size:1rem; color:#555; font-style:italic; }
+  .meaning-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+
+  @media(max-width:480px) {
+    .letter-block { min-width:48px; height:54px; font-size:1.5rem; }
+    .flashcard .big-word { font-size:3rem; }
+    nav button { font-size:0.78rem; min-width:78px; }
+  }
+</style>
+<script src="phonemes.js"></script>
+</head>
+<body>
+
+<header>
+  <span class="star">⭐</span>
+  <h1>Reading Buddy</h1>
+  <a href="games.html" style="margin-left:auto;background:rgba(255,255,255,0.25);color:white;text-decoration:none;border-radius:14px;padding:8px 16px;font-weight:900;font-size:0.95rem;border:2px solid rgba(255,255,255,0.4)">🎮 Games</a>
+</header>
+
+<nav>
+  <button class="active" onclick="showScreen('phonics',this)">🔤 Phonics</button>
+  <button onclick="showScreen('sightwords',this)">👁️ Sight Words</button>
+  <button onclick="showScreen('listen',this)">🎙️ Listen</button>
+  <button onclick="showScreen('meaning',this)">📖 Meaning</button>
+</nav>
+
+<main>
+
+<!-- ══════════ PHONICS ══════════ -->
+<section class="screen active" id="screen-phonics">
+  <div class="section-title">🔤 Let's Break the Word!</div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Vowel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sky)"></div>Consonant</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>Digraph (sh ch th)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Vowel pair (ai ea oo)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9ca3af"></div>Silent</div>
+  </div>
+
+  <div class="word-input-row">
+    <input type="text" id="phonicsInput" placeholder="Type a word…" maxlength="20"
+      onkeydown="if(event.key==='Enter')buildPhonics()">
+    <button class="btn btn-purple" onclick="buildPhonics()">Go! 🚀</button>
+  </div>
+
+  <div class="blocks-row" id="blocksRow">
+    <span class="blocks-placeholder">Your word will appear as letter blocks here!</span>
+  </div>
+
+  <div class="phoneme-seq" id="phonemeSeq" style="display:none">
+    <h3>🔊 Tap each sound:</h3>
+    <div class="phoneme-seq-row" id="phonemeSeqRow"></div>
+  </div>
+
+  <div class="phonics-breakdown" id="phonicsInfo" style="display:none">
+    <h3>✂️ Tap each part (syllable):</h3>
+    <div class="syllable-row" id="syllableRow"></div>
+  </div>
+
+  <div class="action-row" id="actionRow" style="display:none">
+    <button class="btn btn-mint"   onclick="speakFullWord()">🔊 Full Word</button>
+    <button class="btn btn-yellow" onclick="spellPhonics()">✏️ Sound by Sound</button>
+    <button class="btn btn-sky"    onclick="blendIt()">🔗 Blend It!</button>
+    <button class="btn btn-coral"  onclick="readMeaningFor()">📖 What's it mean?</button>
+  </div>
+
+  <div style="text-align:center">
+    <span class="speaking-indicator" id="speakingIndicator">
+      <span class="speaking-dot"></span> Speaking…
+    </span>
+  </div>
+
+  <div style="margin-top:28px">
+    <div class="section-title" style="font-size:1rem;margin-bottom:10px">⚡ Try these words:</div>
+    <div class="quick-words">
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('cat')">cat</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('shop')">shop</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('fish')">fish</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('chip')">chip</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('rain')">rain</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('boat')">boat</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('that')">that</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('phone')">phone</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('night')">night</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('cake')">cake</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('frog')">frog</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="loadWord('tree')">tree</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SIGHT WORDS ══════════ -->
+<section class="screen" id="screen-sightwords">
+  <div class="section-title">👁️ Sight Words</div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="swProgress" style="width:0%"></div></div>
+  <div class="flashcard" id="flashcard">
+    <div class="category-badge" id="swCategory">Dolch Pre-K</div>
+    <div class="word-emoji" id="swEmoji">🌟</div>
+    <div class="big-word" id="swWord">the</div>
+    <div class="word-sentence" id="swSentence">I see <strong>the</strong> cat.</div>
+  </div>
+  <div class="card-nav">
+    <button class="btn btn-coral" onclick="prevCard()">⬅️ Back</button>
+    <button class="btn btn-mint"  onclick="speakSightWord()">🔊 Hear It</button>
+    <button class="btn btn-purple" onclick="nextCard()">Next ➡️</button>
+  </div>
+  <div style="text-align:center;margin-bottom:20px"><span id="swCounter" style="color:#888;font-weight:700">1 / 20</span></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-yellow" onclick="filterCategory('preK')" style="font-size:0.85rem;padding:9px 14px">Pre-K Words</button>
+    <button class="btn btn-sky"    onclick="filterCategory('k')"    style="font-size:0.85rem;padding:9px 14px">Kindergarten</button>
+    <button class="btn btn-mint"   onclick="filterCategory('colors')" style="font-size:0.85rem;padding:9px 14px">Colours 🎨</button>
+    <button class="btn btn-orange" onclick="filterCategory('numbers')" style="font-size:0.85rem;padding:9px 14px">Numbers 🔢</button>
+  </div>
+</section>
+
+<!-- ══════════ LISTEN ══════════ -->
+<section class="screen" id="screen-listen">
+  <div class="section-title">🎙️ Listen &amp; Repeat</div>
+  <div class="listen-card">
+    <div class="mic-icon" id="micIcon" onclick="toggleListening()">🎙️</div>
+    <h2 id="listenStatus">Tap the mic to start!</h2>
+    <p id="listenHint">I'll listen to what you say!</p>
+  </div>
+  <div class="word-result-box" id="wordResult">
+    <div class="heard-label">I heard:</div>
+    <div class="heard-word" id="heardWord">—</div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-mint"   onclick="speakHeardWord()">🔊 Hear It</button>
+      <button class="btn btn-purple" onclick="analyseHeardWord()">🔤 Break It Up</button>
+    </div>
+  </div>
+  <div style="background:white;border-radius:20px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
+    <div style="font-weight:700;font-size:1rem;margin-bottom:14px;color:#555">🎵 Tap a word to hear it slowly:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button class="btn btn-sky"    style="font-size:0.95rem;padding:9px 14px" onclick="speakAndShow('apple')">apple 🍎</button>
+      <button class="btn btn-coral"  style="font-size:0.95rem;padding:9px 14px" onclick="speakAndShow('elephant')">elephant 🐘</button>
+      <button class="btn btn-mint"   style="font-size:0.95rem;padding:9px 14px" onclick="speakAndShow('umbrella')">umbrella ☂️</button>
+      <button class="btn btn-yellow" onclick="speakAndShow('orange')" style="color:#333;font-size:0.95rem;padding:9px 14px">orange 🍊</button>
+      <button class="btn btn-purple" style="font-size:0.95rem;padding:9px 14px" onclick="speakAndShow('ship')">ship 🚢</button>
+      <button class="btn btn-orange" style="font-size:0.95rem;padding:9px 14px" onclick="speakAndShow('chair')">chair 🪑</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ MEANING ══════════ -->
+<section class="screen" id="screen-meaning">
+  <div class="section-title">📖 What Does It Mean?</div>
+  <div class="meaning-grid" id="meaningGrid"></div>
+  <div style="display:flex;gap:10px;margin-bottom:20px">
+    <input type="text" id="meaningInput" placeholder="Type any word…"
+      style="flex:1;padding:14px 18px;border:3px solid #ddd;border-radius:16px;font-size:1.2rem;font-family:'Nunito',sans-serif;font-weight:700;outline:none"
+      onkeydown="if(event.key==='Enter')lookupMeaning()">
+    <button class="btn btn-purple" onclick="lookupMeaning()">Look Up 🔍</button>
+  </div>
+  <div class="meaning-card" id="meaningCard" style="display:none">
+    <div class="meaning-card-header">
+      <div class="meaning-emoji" id="meaningEmoji">🌟</div>
+      <div>
+        <div class="meaning-word" id="meaningWord">word</div>
+        <button class="btn btn-mint" style="font-size:0.85rem;padding:6px 14px;margin-top:6px" onclick="speakMeaning()">🔊 Read to me</button>
+      </div>
+    </div>
+    <div class="meaning-body">
+      <div class="meaning-def" id="meaningDef"></div>
+      <div class="meaning-example" id="meaningExample"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// PHONICS SOUND ENGINE
+// Maps graphemes → TTS-friendly pronunciation strings
+// that produce correct phonics sounds rather than letter names
+// Based on UK phonics / Jolly Phonics / Alphablocks approach
+// ══════════════════════════════════════════════════════════
+
+// Each entry: display text, TTS string, type, label shown under block
+// Types: vowel | consonant | digraph | vowel-digraph | silent
+const PHONEME_MAP = [
+  // ── DIGRAPHS first (order matters — check longer sequences first) ──
+  { g:'sh', tts:'shh',          type:'digraph',      label:'/sh/' },
+  { g:'ch', tts:'ch',           type:'digraph',      label:'/ch/' },
+  { g:'th', tts:'th',           type:'digraph',      label:'/th/' },
+  { g:'ph', tts:'ff',           type:'digraph',      label:'/f/'  },
+  { g:'wh', tts:'w',            type:'digraph',      label:'/w/'  },
+  { g:'ng', tts:'ng',           type:'digraph',      label:'/ng/' },
+  { g:'ck', tts:'k',            type:'digraph',      label:'/k/'  },
+  { g:'qu', tts:'kw',           type:'digraph',      label:'/kw/' },
+  // ── VOWEL DIGRAPHS ──
+  { g:'ai', tts:'ay',           type:'vowel-digraph', label:'/ay/' },
+  { g:'ay', tts:'ay',           type:'vowel-digraph', label:'/ay/' },
+  { g:'ea', tts:'ee',           type:'vowel-digraph', label:'/ee/' },
+  { g:'ee', tts:'ee',           type:'vowel-digraph', label:'/ee/' },
+  { g:'ie', tts:'eye',          type:'vowel-digraph', label:'/ie/' },
+  { g:'oa', tts:'oh',           type:'vowel-digraph', label:'/oa/' },
+  { g:'oo', tts:'oo',           type:'vowel-digraph', label:'/oo/' },
+  { g:'ou', tts:'ow',           type:'vowel-digraph', label:'/ow/' },
+  { g:'ow', tts:'ow',           type:'vowel-digraph', label:'/ow/' },
+  { g:'oi', tts:'oy',           type:'vowel-digraph', label:'/oy/' },
+  { g:'oy', tts:'oy',           type:'vowel-digraph', label:'/oy/' },
+  { g:'ue', tts:'yoo',          type:'vowel-digraph', label:'/yoo/'},
+  { g:'ui', tts:'oo',           type:'vowel-digraph', label:'/oo/' },
+  { g:'aw', tts:'aw',           type:'vowel-digraph', label:'/aw/' },
+  { g:'au', tts:'aw',           type:'vowel-digraph', label:'/aw/' },
+  { g:'ew', tts:'yoo',          type:'vowel-digraph', label:'/yoo/'},
+  { g:'ar', tts:'ar',           type:'vowel-digraph', label:'/ar/' },
+  { g:'er', tts:'er',           type:'vowel-digraph', label:'/er/' },
+  { g:'ir', tts:'er',           type:'vowel-digraph', label:'/er/' },
+  { g:'or', tts:'or',           type:'vowel-digraph', label:'/or/' },
+  { g:'ur', tts:'er',           type:'vowel-digraph', label:'/er/' },
+  // ── SILENT LETTERS ──
+  { g:'kn', tts:'n',            type:'digraph',      label:'kn=/n/'},
+  { g:'wr', tts:'r',            type:'digraph',      label:'wr=/r/'},
+  { g:'gn', tts:'n',            type:'digraph',      label:'gn=/n/'},
+  // ── SINGLE VOWELS ──
+  { g:'a',  tts:'ah',           type:'vowel',        label:'/a/'  },
+  { g:'e',  tts:'eh',           type:'vowel',        label:'/e/'  },
+  { g:'i',  tts:'ih',           type:'vowel',        label:'/i/'  },
+  { g:'o',  tts:'o',            type:'vowel',        label:'/o/'  },
+  { g:'u',  tts:'uh',           type:'vowel',        label:'/u/'  },
+  // ── SINGLE CONSONANTS ──
+  { g:'b',  tts:'buh',          type:'consonant',    label:'/b/'  },
+  { g:'c',  tts:'kuh',          type:'consonant',    label:'/k/'  },
+  { g:'d',  tts:'duh',          type:'consonant',    label:'/d/'  },
+  { g:'f',  tts:'fff',          type:'consonant',    label:'/f/'  },
+  { g:'g',  tts:'guh',          type:'consonant',    label:'/g/'  },
+  { g:'h',  tts:'huh',          type:'consonant',    label:'/h/'  },
+  { g:'j',  tts:'juh',          type:'consonant',    label:'/j/'  },
+  { g:'k',  tts:'kuh',          type:'consonant',    label:'/k/'  },
+  { g:'l',  tts:'lll',          type:'consonant',    label:'/l/'  },
+  { g:'m',  tts:'mmm',          type:'consonant',    label:'/m/'  },
+  { g:'n',  tts:'nnn',          type:'consonant',    label:'/n/'  },
+  { g:'p',  tts:'puh',          type:'consonant',    label:'/p/'  },
+  { g:'r',  tts:'rrr',          type:'consonant',    label:'/r/'  },
+  { g:'s',  tts:'sss',          type:'consonant',    label:'/s/'  },
+  { g:'t',  tts:'tuh',          type:'consonant',    label:'/t/'  },
+  { g:'v',  tts:'vvv',          type:'consonant',    label:'/v/'  },
+  { g:'w',  tts:'wuh',          type:'consonant',    label:'/w/'  },
+  { g:'x',  tts:'ks',           type:'consonant',    label:'/ks/' },
+  { g:'y',  tts:'yuh',          type:'consonant',    label:'/y/'  },
+  { g:'z',  tts:'zzz',          type:'consonant',    label:'/z/'  },
+];
+
+// Build lookup for fast access
+const GRAPHEME_LOOKUP = {};
+PHONEME_MAP.forEach(p => { GRAPHEME_LOOKUP[p.g] = p; });
+
+// ── Silent-e rule words: trailing 'e' is silent ──
+function hasSilentE(word) {
+  return word.length >= 4 && word.endsWith('e') && !'aeiou'.includes(word[word.length-2]) && 'aeiou'.includes(word[word.length-3]);
+}
+
+// ── Tokenise word into phoneme segments ──
+function tokenise(word) {
+  word = word.toLowerCase();
+  const tokens = [];
+  let i = 0;
+  while (i < word.length) {
+    // Try 2-char digraph first
+    if (i + 1 < word.length) {
+      const two = word.slice(i, i+2);
+      if (GRAPHEME_LOOKUP[two]) {
+        tokens.push({ ...GRAPHEME_LOOKUP[two], display: two });
+        i += 2;
+        continue;
+      }
+    }
+    // Single char
+    const one = word[i];
+    if (GRAPHEME_LOOKUP[one]) {
+      // Check for silent final e
+      if (one === 'e' && i === word.length - 1 && hasSilentE(word)) {
+        tokens.push({ g:'e', tts:'', type:'silent', label:'silent e', display:'e' });
+      } else {
+        tokens.push({ ...GRAPHEME_LOOKUP[one], display: one });
+      }
+    } else {
+      tokens.push({ g:one, tts:one, type:'consonant', label:'', display:one });
+    }
+    i++;
+  }
+  return tokens;
+}
+
+// ══════════════════════════════════════════
+// PHONICS AUDIO ENGINE (uses phonemes.js)
+// Web Audio API — NO TTS for phonemes
+// ══════════════════════════════════════════
+let _audioCtx = null;
+const _audioCache = {};
+
+function getACtx(){
+  if(!_audioCtx) try{ _audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  return _audioCtx;
+}
+
+async function _decodeKey(key){
+  if(_audioCache[key]) return _audioCache[key];
+  const b64 = (typeof PHONEME_AUDIO!=='undefined') ? PHONEME_AUDIO[key] : null;
+  if(!b64) return null;
+  const ctx=getACtx(); if(!ctx) return null;
+  const bin=atob(b64), bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  try{ const buf=await ctx.decodeAudioData(bytes.buffer.slice(0)); _audioCache[key]=buf; return buf; }catch(e){ return null; }
+}
+
+async function playKey(key, cb){
+  const buf=await _decodeKey(key);
+  const ctx=getACtx();
+  if(!buf||!ctx){ setTimeout(()=>cb&&cb(),200); return; }
+  const src=ctx.createBufferSource(); src.buffer=buf; src.playbackRate.value=1.05;
+  const gain=ctx.createGain(); gain.gain.value=1.4;
+  src.connect(gain); gain.connect(ctx.destination);
+  src.onended=()=>cb&&cb(); src.start();
+}
+
+function playKeys(keys, cb){
+  let i=0;
+  function next(){ if(i>=keys.length){cb&&cb();return;} playKey(keys[i++],()=>setTimeout(next,300)); }
+  next();
+}
+
+// speakPhoneme — plays pre-built audio, no TTS
+function speakPhoneme(token){
+  if(!token||!token.g) return;
+  const key = token.g.toLowerCase();
+  if(typeof PHONEME_AUDIO!=='undefined' && PHONEME_AUDIO[key]) playKey(key);
+}
+
+// speak — TTS is fine for full words, just not individual phonemes
+function speak(text, rate=0.85, pitch=1.05, onEnd){
+  if(!('speechSynthesis' in window)||!text||!text.trim()){ onEnd&&onEnd(); return; }
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.rate=rate; u.pitch=pitch; u.lang='en-US';
+    u.onend=()=>onEnd&&onEnd(); u.onerror=()=>onEnd&&onEnd();
+    speechSynthesis.speak(u);
+  }catch(e){ onEnd&&onEnd(); }
+}
+
+document.addEventListener('click',()=>{ const c=getACtx(); if(c&&c.state==='suspended')c.resume(); },{once:false});
+
+// ══════════════════════════════════════════
+// PHONICS SCREEN
+// ══════════════════════════════════════════
+let currentWord = '';
+let currentTokens = [];
+
+function buildPhonics() {
+  const input = document.getElementById('phonicsInput');
+  const word = input.value.trim().replace(/[^a-zA-Z]/g,'');
+  if (!word) return;
+  currentWord = word.toLowerCase();
+  input.value = currentWord;
+  renderBlocks(currentWord);
+}
+
+function loadWord(w) {
+  document.getElementById('phonicsInput').value = w;
+  currentWord = w;
+  renderBlocks(w);
+}
+
+function renderBlocks(word) {
+  currentTokens = tokenise(word);
+  const row = document.getElementById('blocksRow');
+  row.innerHTML = '';
+
+  currentTokens.forEach((tok, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'letter-block ' + tok.type;
+    btn.textContent = tok.display.toUpperCase();
+    if (tok.label) {
+      const lbl = document.createElement('span');
+      lbl.className = 'phoneme-label';
+      lbl.textContent = tok.label;
+      btn.appendChild(lbl);
+    }
+    btn.title = tok.label || tok.type;
+    btn.onclick = () => {
+      btn.classList.add('bouncing');
+      setTimeout(() => btn.classList.remove('bouncing'), 500);
+      if (tok.type === 'silent') {
+        speak(`This E is silent. It makes the vowel say its name.`, 0.8);
+      } else {
+        speakPhoneme(tok);
+      }
+    };
+    row.appendChild(btn);
+  });
+
+  // Phoneme sequence chips
+  const seqBox = document.getElementById('phonemeSeq');
+  const seqRow = document.getElementById('phonemeSeqRow');
+  seqRow.innerHTML = '';
+  const active = currentTokens.filter(t => t.tts);
+  active.forEach((tok, i) => {
+    if (i > 0) {
+      const plus = document.createElement('span');
+      plus.className = 'phoneme-plus'; plus.textContent = '+';
+      seqRow.appendChild(plus);
+    }
+    const chip = document.createElement('button');
+    chip.className = 'phoneme-chip';
+    chip.textContent = tok.label || tok.display;
+    chip.onclick = () => { chip.style.transform='scale(1.15)'; setTimeout(()=>chip.style.transform='',200); speakPhoneme(tok); };
+    seqRow.appendChild(chip);
+  });
+  seqBox.style.display = 'block';
+
+  // Syllables
+  const sylls = syllabify(word);
+  const syllRow = document.getElementById('syllableRow');
+  syllRow.innerHTML = '';
+  sylls.forEach((syll, i) => {
+    if (i > 0) { const s=document.createElement('span'); s.className='syllable-sep'; s.textContent='·'; syllRow.appendChild(s); }
+    const chip = document.createElement('button');
+    chip.className = 'syllable-chip';
+    chip.textContent = syll;
+    chip.onclick = () => { chip.style.transform='scale(1.12)'; setTimeout(()=>chip.style.transform='',200); speak(syll, 0.72); };
+    syllRow.appendChild(chip);
+  });
+  document.getElementById('phonicsInfo').style.display = 'block';
+  document.getElementById('actionRow').style.display = 'flex';
+
+  // Auto-announce
+  const vowelNames = currentTokens.filter(t=>t.type==='vowel'||t.type==='vowel-digraph').map(t=>t.label||t.display).join(', ');
+  const announcement = `Let's read ${word}.` +
+    (vowelNames ? ` The vowel sound is ${vowelNames}.` : '') +
+    ` Now let's say each sound. ` +
+    currentTokens.filter(t=>t.tts).map(t=>t.tts).join('. ') + `. ` +
+    `Now blend it: ${word}.`;
+  setTimeout(() => speak(announcement, 0.78), 300);
+}
+
+function syllabify(word) {
+  word = word.toLowerCase();
+  const vPos = [];
+  for (let i=0; i<word.length; i++) if('aeiou'.includes(word[i])) vPos.push(i);
+  if (vPos.length <= 1) return [word];
+  if (word.endsWith('e') && hasSilentE(word)) {
+    // VCe → single syllable for short words
+    if (vPos.length === 2) return [word];
+  }
+  const chunks = []; let start = 0;
+  for (let i=0; i<vPos.length-1; i++) {
+    const v1=vPos[i], v2=vPos[i+1];
+    const between = v2-v1-1;
+    let split;
+    if (between === 0) split = v2;
+    else if (between === 1) split = v2;
+    else split = v1 + Math.ceil(between/2) + 1;
+    chunks.push(word.slice(start, split));
+    start = split;
+  }
+  chunks.push(word.slice(start));
+  return chunks.filter(c=>c.length>0);
+}
+
+function speakFullWord() {
+  if (!currentWord) return;
+  speak(currentWord, 0.82, 1.05);
+}
+
+// Sound by sound with pauses
+function spellPhonics() {
+  if (!currentTokens.length) return;
+  const active = currentTokens.filter(t => t.g && t.type !== 'silent');
+  const keys = active.map(t => t.g.toLowerCase());
+  playKeys(keys);
+}
+
+// Blend: sounds → word
+function blendIt() {
+  if (!currentWord) return;
+  const active = currentTokens.filter(t => t.g && t.type !== 'silent');
+  const keys = active.map(t => t.g.toLowerCase());
+  playKeys(keys, () => setTimeout(() => speak(currentWord, 0.8), 300));
+}
+
+function readMeaningFor() {
+  if (!currentWord) return;
+  document.getElementById('meaningInput').value = currentWord;
+  showScreen('meaning', document.querySelectorAll('nav button')[3]);
+  lookupMeaning();
+}
+
+// ══════════════════════════════════════════
+// SIGHT WORDS
+// ══════════════════════════════════════════
+const SIGHT_WORDS = {
+  preK:[
+    {word:'the',emoji:'👆',sentence:'I see the cat.'},
+    {word:'a',emoji:'🅰️',sentence:'I have a dog.'},
+    {word:'and',emoji:'➕',sentence:'Cats and dogs.'},
+    {word:'to',emoji:'➡️',sentence:'I go to school.'},
+    {word:'is',emoji:'❓',sentence:'This is fun.'},
+    {word:'in',emoji:'📦',sentence:'The ball is in the box.'},
+    {word:'it',emoji:'☝️',sentence:'It is big.'},
+    {word:'of',emoji:'🍰',sentence:'A slice of cake.'},
+    {word:'you',emoji:'🫵',sentence:'I like you!'},
+    {word:'he',emoji:'👦',sentence:'He is my friend.'},
+    {word:'she',emoji:'👧',sentence:'She likes cats.'},
+    {word:'we',emoji:'👫',sentence:'We are happy.'},
+    {word:'my',emoji:'💖',sentence:'This is my toy.'},
+    {word:'on',emoji:'🐦',sentence:'A bird is on the tree.'},
+    {word:'do',emoji:'✔️',sentence:'I do my work.'},
+    {word:'go',emoji:'🏃',sentence:'Let us go!'},
+    {word:'up',emoji:'⬆️',sentence:'Look up at the sky.'},
+    {word:'can',emoji:'💪',sentence:'I can jump.'},
+    {word:'big',emoji:'🐘',sentence:'The elephant is big.'},
+    {word:'run',emoji:'🏃',sentence:'I can run fast.'},
+  ],
+  k:[
+    {word:'all',emoji:'🌍',sentence:'We all play together.'},
+    {word:'am',emoji:'😊',sentence:'I am happy.'},
+    {word:'are',emoji:'🌟',sentence:'Stars are bright.'},
+    {word:'ate',emoji:'🍎',sentence:'She ate an apple.'},
+    {word:'be',emoji:'🐝',sentence:'Be kind to others.'},
+    {word:'but',emoji:'↩️',sentence:'I like dogs but not snakes.'},
+    {word:'came',emoji:'🚶',sentence:'She came to school.'},
+    {word:'did',emoji:'✔️',sentence:'He did his homework.'},
+    {word:'for',emoji:'🎁',sentence:'This is for you!'},
+    {word:'get',emoji:'🤲',sentence:'Can I get a cookie?'},
+    {word:'has',emoji:'💼',sentence:'She has a red bag.'},
+    {word:'him',emoji:'👦',sentence:'Give it to him.'},
+    {word:'his',emoji:'🎒',sentence:'That is his book.'},
+    {word:'like',emoji:'❤️',sentence:'I like ice cream!'},
+    {word:'look',emoji:'👀',sentence:'Look at the rainbow!'},
+    {word:'make',emoji:'🛠️',sentence:'Let us make a tower.'},
+    {word:'not',emoji:'🚫',sentence:'I am not tired.'},
+    {word:'play',emoji:'🎮',sentence:'Let us play together.'},
+    {word:'said',emoji:'💬',sentence:'She said hello.'},
+    {word:'see',emoji:'👁️',sentence:'I can see the stars.'},
+  ],
+  colors:[
+    {word:'red',emoji:'🔴',sentence:'The apple is red.'},
+    {word:'blue',emoji:'🔵',sentence:'The sky is blue.'},
+    {word:'green',emoji:'🟢',sentence:'Frogs are green.'},
+    {word:'yellow',emoji:'🟡',sentence:'The sun is yellow.'},
+    {word:'orange',emoji:'🟠',sentence:'Oranges are orange!'},
+    {word:'purple',emoji:'🟣',sentence:'I love purple grapes.'},
+    {word:'pink',emoji:'🌸',sentence:'The flower is pink.'},
+    {word:'white',emoji:'⬜',sentence:'Snow is white.'},
+    {word:'black',emoji:'⬛',sentence:'The night is black.'},
+    {word:'brown',emoji:'🟫',sentence:'Chocolate is brown.'},
+  ],
+  numbers:[
+    {word:'one',emoji:'1️⃣',sentence:'I have one cat.'},
+    {word:'two',emoji:'2️⃣',sentence:'I see two dogs.'},
+    {word:'three',emoji:'3️⃣',sentence:'She has three books.'},
+    {word:'four',emoji:'4️⃣',sentence:'There are four birds.'},
+    {word:'five',emoji:'5️⃣',sentence:'I need five more.'},
+    {word:'six',emoji:'6️⃣',sentence:'Six is my lucky number.'},
+    {word:'seven',emoji:'7️⃣',sentence:'Seven days in a week.'},
+    {word:'eight',emoji:'8️⃣',sentence:'An octopus has eight arms.'},
+    {word:'nine',emoji:'9️⃣',sentence:'Nine plus one is ten.'},
+    {word:'ten',emoji:'🔟',sentence:'I count to ten.'},
+  ]
+};
+
+let swCat='preK', swIdx=0, swCards=[];
+
+function filterCategory(cat) { swCat=cat; swCards=SIGHT_WORDS[cat]; swIdx=0; updateFlashcard(); }
+function nextCard() { swIdx=(swIdx+1)%swCards.length; updateFlashcard(); speakSightWord(); }
+function prevCard() { swIdx=(swIdx-1+swCards.length)%swCards.length; updateFlashcard(); }
+function updateFlashcard() {
+  const c=swCards[swIdx];
+  document.getElementById('swWord').textContent=c.word;
+  document.getElementById('swEmoji').textContent=c.emoji;
+  document.getElementById('swSentence').innerHTML=c.sentence.replace(
+    new RegExp(`\\b${c.word}\\b`,'gi'),
+    `<strong style="color:var(--purple)">${c.word}</strong>`);
+  document.getElementById('swCategory').textContent={preK:'Dolch Pre-K',k:'Kindergarten',colors:'Colours 🎨',numbers:'Numbers 🔢'}[swCat];
+  document.getElementById('swCounter').textContent=`${swIdx+1} / ${swCards.length}`;
+  document.getElementById('swProgress').style.width=((swIdx+1)/swCards.length*100)+'%';
+}
+function speakSightWord() { const c=swCards[swIdx]; speak(`${c.word}. ${c.sentence}`, 0.8); }
+filterCategory('preK');
+
+// ══════════════════════════════════════════
+// LISTEN MODE
+// ══════════════════════════════════════════
+let recognition=null, listening=false;
+function toggleListening() {
+  if (!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)) {
+    document.getElementById('listenStatus').textContent='Sorry, try Chrome! 😢'; return;
+  }
+  if (listening) { recognition&&recognition.stop(); stopListening(); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();
+  recognition.lang='en-US'; recognition.continuous=false; recognition.interimResults=false;
+  recognition.onresult=e=>{ const w=e.results[0][0].transcript.trim().split(' ')[0].replace(/[^a-zA-Z]/g,''); showHeardWord(w); stopListening(); };
+  recognition.onerror=()=>stopListening();
+  recognition.onend=()=>{ if(listening)stopListening(); };
+  recognition.start();
+  listening=true;
+  document.getElementById('micIcon').textContent='🔴';
+  document.getElementById('listenStatus').textContent='Listening… say a word!';
+  document.getElementById('listenHint').textContent='I\'m all ears! 👂';
+}
+function stopListening() { listening=false; document.getElementById('micIcon').textContent='🎙️'; document.getElementById('listenStatus').textContent='Tap the mic to start!'; document.getElementById('listenHint').textContent='I\'ll listen to what you say!'; }
+function showHeardWord(w) { document.getElementById('heardWord').textContent=w; document.getElementById('wordResult').classList.add('visible'); }
+function speakHeardWord() { const w=document.getElementById('heardWord').textContent; if(w&&w!=='—')speak(w,0.8); }
+function analyseHeardWord() { const w=document.getElementById('heardWord').textContent; if(w&&w!=='—'){ document.getElementById('phonicsInput').value=w; showScreen('phonics',document.querySelectorAll('nav button')[0]); loadWord(w); } }
+function speakAndShow(word) { showHeardWord(word); speak(`${word}. `, 0.75, 1.0, ()=>{ setTimeout(()=>{ loadWord(word); },500); }); }
+
+// ══════════════════════════════════════════
+// MEANING DICTIONARY
+// ══════════════════════════════════════════
+const DICTIONARY = {
+  cat:    {emoji:'🐱',def:'A small, fluffy animal that says "meow". Cats like to sleep and play with toys.',ex:'The cat sat on the mat.'},
+  dog:    {emoji:'🐶',def:'A friendly animal that loves to run and play. Dogs wag their tails when they are happy!',ex:'My dog likes to fetch the ball.'},
+  sun:    {emoji:'☀️',def:'The big, bright star in the sky that gives us light and warmth every day.',ex:'The sun shines in the morning.'},
+  fish:   {emoji:'🐠',def:'An animal that lives in water and uses fins to swim. Fish breathe underwater!',ex:'I see a fish in the pond.'},
+  frog:   {emoji:'🐸',def:'A small green animal that jumps and says "ribbit". Frogs love to live near ponds.',ex:'The frog jumped into the water.'},
+  cake:   {emoji:'🎂',def:'A sweet food made with flour, eggs, and sugar. We eat cake at birthday parties!',ex:'She blew out the candles on the cake.'},
+  rain:   {emoji:'🌧️',def:'Water that falls from clouds in the sky. Rain helps flowers and trees grow.',ex:'We need an umbrella when it rains.'},
+  bird:   {emoji:'🐦',def:'An animal with wings and feathers that can fly in the sky. Birds lay eggs in nests.',ex:'A bird sang outside my window.'},
+  shop:   {emoji:'🛍️',def:'A place where you buy things. You go to a shop to get food, toys, and clothes.',ex:'We went to the shop to buy milk.'},
+  chip:   {emoji:'🍟',def:'A thin, crispy slice of fried potato. Chips are crunchy and yummy!',ex:'I ate chips with my lunch.'},
+  that:   {emoji:'👉',def:'A word we use to point to something. "That" means the thing over there!',ex:'Look at that big elephant!'},
+  phone:  {emoji:'📱',def:'A small gadget you use to call people and send messages. Phones can also play games!',ex:'Mum called me on the phone.'},
+  night:  {emoji:'🌙',def:'The dark time after the sun sets. At night we can see stars and the moon.',ex:'We sleep at night.'},
+  tree:   {emoji:'🌳',def:'A tall plant with a thick trunk, branches, and leaves. Birds make nests in trees.',ex:'We played under the big tree.'},
+  apple:  {emoji:'🍎',def:'A round fruit that can be red, green, or yellow. Apples are crunchy and delicious!',ex:'She ate a red apple for lunch.'},
+  elephant:{emoji:'🐘',def:'The biggest land animal on Earth! Elephants have long noses called trunks.',ex:'The elephant sprayed water with its trunk.'},
+  umbrella:{emoji:'☂️',def:'A thing you hold above your head to stay dry when it rains. It opens up like a mushroom!',ex:'I used my umbrella in the rain.'},
+  orange: {emoji:'🍊',def:'A round, juicy fruit full of vitamin C. Oranges are yummy and healthy!',ex:'I drank a glass of orange juice.'},
+  ship:   {emoji:'🚢',def:'A very big boat that sails across the sea. Ships carry people and things across the ocean.',ex:'The ship sailed across the sea.'},
+  chair:  {emoji:'🪑',def:'A seat with four legs and a back. You sit on a chair at the dinner table.',ex:'I sat on my favourite chair.'},
+  house:  {emoji:'🏠',def:'A building where people live with their family. Houses have rooms, a kitchen, and often a garden.',ex:'My house is near the park.'},
+  star:   {emoji:'⭐',def:'A tiny light you see in the sky at night. Stars are actually huge balls of fire very far away!',ex:'I wish upon a shining star.'},
+  flower: {emoji:'🌸',def:'The colourful, pretty part of a plant. Flowers smell lovely and bees love them!',ex:'She picked a pink flower.'},
+  water:  {emoji:'💧',def:'A clear liquid we drink every day to stay healthy. Rain, rivers, and oceans are all water!',ex:'I drink water when I am thirsty.'},
+  happy:  {emoji:'😊',def:'Feeling really good and full of joy inside. You feel happy when something nice happens.',ex:'I am happy when I play with my friends.'},
+  boat:   {emoji:'⛵',def:'A small vehicle that floats on water. You can row a boat with oars or use a sail.',ex:'We rode a boat on the lake.'},
+};
+
+const GRID_WORDS=['cat','dog','fish','shop','chip','boat','rain','apple','tree','house','star','flower'];
+
+function renderMeaningGrid() {
+  const grid=document.getElementById('meaningGrid');
+  grid.innerHTML='';
+  GRID_WORDS.forEach(w=>{
+    const e=DICTIONARY[w];
+    const btn=document.createElement('button');
+    btn.style.cssText='background:white;border:3px solid #eee;border-radius:18px;padding:14px 10px;cursor:pointer;font-family:Nunito,sans-serif;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform 0.1s,border-color 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.07)';
+    btn.innerHTML=`<span style="font-size:2rem">${e.emoji}</span><span style="font-weight:900;font-size:1rem">${w}</span>`;
+    btn.onmouseenter=()=>btn.style.borderColor='var(--purple)';
+    btn.onmouseleave=()=>btn.style.borderColor='#eee';
+    btn.onclick=()=>{ document.getElementById('meaningInput').value=w; lookupMeaning(); };
+    grid.appendChild(btn);
+  });
+}
+
+function lookupMeaning() {
+  const input=document.getElementById('meaningInput').value.trim().toLowerCase().replace(/[^a-z]/g,'');
+  const card=document.getElementById('meaningCard');
+  const entry=DICTIONARY[input];
+  if (!entry) {
+    card.style.display='block';
+    document.getElementById('meaningEmoji').textContent='🤔';
+    document.getElementById('meaningWord').textContent=input;
+    document.getElementById('meaningDef').textContent=`Hmm, I don't know "${input}" yet! Try: cat, dog, shop, fish, boat, rain, apple, tree, house, or star.`;
+    document.getElementById('meaningExample').textContent='';
+    speak(`I am still learning about ${input}! Try another word.`,0.85);
+    return;
+  }
+  card.style.display='block';
+  document.getElementById('meaningEmoji').textContent=entry.emoji;
+  document.getElementById('meaningWord').textContent=input;
+  document.getElementById('meaningDef').textContent=entry.def;
+  document.getElementById('meaningExample').textContent=entry.ex;
+  setTimeout(()=>speakMeaning(),300);
+}
+
+function speakMeaning() {
+  const word=document.getElementById('meaningWord').textContent;
+  const def=document.getElementById('meaningDef').textContent;
+  const ex=document.getElementById('meaningExample').textContent;
+  speak(`${word}! ${def} For example: ${ex}`,0.82);
+}
+
+renderMeaningGrid();
+
+// ══════════════════════════════════════════
+function showScreen(id,btn) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

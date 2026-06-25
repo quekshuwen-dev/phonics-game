@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Games 🎮 Reading Buddy</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky:#5BC8F5; --yellow:#FFD93D; --coral:#FF6B6B; --mint:#6BCFA5;
+  --purple:#C77DFF; --orange:#FF9A3C; --bg:#FFFDF7; --text:#2D2D2D;
+  --correct:#22c55e; --wrong:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#FF6B6B,#C77DFF);padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+header h1{color:white;font-size:1.8rem;font-weight:900;text-shadow:2px 2px 0 rgba(0,0,0,0.15)}
+.spin{font-size:1.8rem;animation:spin 3s linear infinite}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+/* STARS BAR */
+.stars-bar{background:white;padding:10px 20px;display:flex;align-items:center;gap:10px;border-bottom:3px solid #eee;font-weight:900;font-size:1rem}
+.star-count{font-size:1.4rem;color:var(--yellow);text-shadow:0 2px 4px rgba(0,0,0,0.1)}
+
+/* GAME MENU */
+#gameMenu{padding:20px;max-width:700px;margin:0 auto}
+.menu-title{font-size:1.5rem;font-weight:900;margin-bottom:18px;text-align:center;color:var(--purple)}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.game-card{background:white;border-radius:24px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;border:3px solid transparent;text-align:center}
+.game-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,0.15);border-color:var(--purple)}
+.game-card .gc-emoji{font-size:2.8rem;margin-bottom:8px}
+.game-card .gc-title{font-size:1rem;font-weight:900;margin-bottom:4px}
+.game-card .gc-desc{font-size:0.8rem;color:#888;line-height:1.4}
+.gc-level{display:inline-block;background:var(--yellow);border-radius:12px;padding:2px 10px;font-size:0.75rem;font-weight:700;margin-top:6px}
+
+/* GAME AREA */
+#gameArea{display:none;padding:20px;max-width:700px;margin:0 auto}
+.game-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.back-btn{background:white;border:3px solid #eee;border-radius:14px;padding:10px 16px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;transition:border-color 0.2s}
+.back-btn:hover{border-color:var(--purple)}
+.game-title{font-size:1.3rem;font-weight:900;flex:1}
+.progress-wrap{background:#eee;border-radius:10px;height:12px;margin-bottom:20px}
+.progress-fill{border-radius:10px;height:12px;transition:width 0.4s;background:linear-gradient(90deg,var(--coral),var(--purple))}
+
+/* QUESTION CARD */
+.q-card{background:white;border-radius:28px;box-shadow:0 6px 24px rgba(0,0,0,0.1);padding:28px 24px;margin-bottom:20px;text-align:center}
+.q-instruction{font-size:0.95rem;color:#888;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.q-prompt{font-size:1.5rem;font-weight:900;margin-bottom:16px;color:var(--text);line-height:1.4}
+.q-play-btn{background:var(--purple);color:white;border:none;border-radius:50%;width:70px;height:70px;font-size:2rem;cursor:pointer;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 rgba(0,0,0,0.2);transition:transform 0.1s,box-shadow 0.1s;animation:pulse 2s infinite}
+.q-play-btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,0.15)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.q-label{font-size:0.85rem;color:#aaa;font-weight:700}
+
+/* ANSWER CHOICES */
+.choices{display:grid;gap:12px;margin-top:4px}
+.choices.col2{grid-template-columns:1fr 1fr}
+.choices.col3{grid-template-columns:1fr 1fr 1fr}
+.choice-btn{background:white;border:3px solid #e5e7eb;border-radius:20px;padding:16px 10px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:900;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 3px 0 rgba(0,0,0,0.08)}
+.choice-btn .ce{font-size:2.4rem}
+.choice-btn .cw{font-size:1.1rem}
+.choice-btn:hover:not(:disabled){border-color:var(--purple);transform:translateY(-3px);box-shadow:0 6px 0 rgba(0,0,0,0.1)}
+.choice-btn.correct{background:#dcfce7;border-color:var(--correct);animation:correctPop 0.4s ease}
+.choice-btn.wrong{background:#fee2e2;border-color:var(--wrong);animation:shake 0.4s ease}
+.choice-btn:disabled{cursor:default}
+@keyframes correctPop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)}}
+
+/* FEEDBACK */
+.feedback{text-align:center;font-size:1.6rem;font-weight:900;padding:16px;border-radius:20px;margin-top:12px;display:none}
+.feedback.show{display:block}
+.feedback.correct{background:#dcfce7;color:#16a34a}
+.feedback.wrong{background:#fee2e2;color:#dc2626}
+
+/* NEXT BTN */
+.next-btn{width:100%;padding:16px;background:var(--mint);color:white;border:none;border-radius:18px;font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.18);transition:transform 0.1s,box-shadow 0.1s;display:none;margin-top:12px}
+.next-btn.show{display:block}
+.next-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,0.12)}
+
+/* BLEND DISPLAY */
+.blend-display{display:flex;align-items:center;justify-content:center;gap:8px;font-size:3rem;font-weight:900;margin:10px 0}
+.blend-letter{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:16px;color:white;font-size:2rem;box-shadow:0 6px 0 rgba(0,0,0,0.2)}
+.bl-vowel{background:var(--coral);box-shadow:0 6px 0 #c0392b}
+.bl-cons{background:var(--sky);box-shadow:0 6px 0 #2980b9}
+.bl-dig{background:#a855f7;box-shadow:0 6px 0 #7c3aed;min-width:90px;font-size:1.6rem}
+.blend-sep{color:#ccc;font-size:2rem}
+
+/* SORTING GAME */
+.sort-area{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.sort-bucket{background:white;border:3px dashed #ddd;border-radius:20px;padding:16px;min-height:120px;text-align:center;transition:border-color 0.2s;position:relative}
+.sort-bucket.over{border-color:var(--purple);background:#FAF5FF}
+.sort-bucket .bucket-label{font-size:1.1rem;font-weight:900;margin-bottom:8px}
+.sort-bucket .bucket-emoji{font-size:2rem;margin-bottom:4px}
+.word-tokens{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
+.word-token{background:var(--yellow);color:var(--text);border:none;border-radius:16px;padding:10px 18px;font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:900;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,0.15);transition:transform 0.1s;user-select:none}
+.word-token:hover{transform:translateY(-2px)}
+.sorted-word{background:#f3f4f6;border-radius:12px;padding:6px 12px;font-weight:700;font-size:0.95rem;display:inline-block;margin:3px}
+
+/* RHYME GAME */
+.rhyme-word{font-size:3.5rem;font-weight:900;color:var(--purple);text-align:center;padding:20px;background:white;border-radius:24px;box-shadow:0 4px 20px rgba(0,0,0,0.1);margin-bottom:16px}
+
+/* RESULTS SCREEN */
+.results{text-align:center;padding:30px 20px}
+.results .trophy{font-size:5rem;margin-bottom:16px}
+.results h2{font-size:2rem;font-weight:900;margin-bottom:8px}
+.results .score-text{font-size:1.2rem;color:#555;margin-bottom:20px}
+.stars-earned{display:flex;gap:8px;justify-content:center;margin:16px 0;font-size:2.5rem}
+.star-earned{animation:starPop 0.4s ease both}
+@keyframes starPop{0%{transform:scale(0) rotate(-30deg)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* UTIL */
+.btn{padding:14px 22px;border:none;border-radius:16px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;box-shadow:0 5px 0 rgba(0,0,0,0.18)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,0.1)}
+.btn-purple{background:var(--purple);color:white}
+.btn-coral{background:var(--coral);color:white}
+.btn-mint{background:var(--mint);color:white}
+
+@media(max-width:480px){
+  .game-grid{grid-template-columns:1fr 1fr}
+  .choices.col3{grid-template-columns:1fr 1fr}
+  .blend-letter{width:58px;height:58px;font-size:1.6rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="spin">🎮</span>
+  <h1>Sound Games</h1>
+</header>
+
+<div class="stars-bar">
+  ⭐ Stars earned: <span class="star-count" id="totalStars">0</span>
+  &nbsp;|&nbsp; 🏆 <span id="totalCorrect">0</span> correct
+  &nbsp;<a href="index.html" style="margin-left:auto;text-decoration:none;font-size:0.85rem;color:var(--purple)">← Back to Reading Buddy</a>
+</div>
+
+<!-- ══════ GAME MENU ══════ -->
+<div id="gameMenu">
+  <div class="menu-title">🌟 Pick a Game!</div>
+  <div class="game-grid">
+
+    <div class="game-card" onclick="startGame('firstSound')">
+      <div class="gc-emoji">👂</div>
+      <div class="gc-title">First Sound Hunt</div>
+      <div class="gc-desc">Which picture starts with that sound?</div>
+      <div class="gc-level">Pre-K · Level 1</div>
+    </div>
+
+    <div class="game-card" onclick="startGame('lastSound')">
+      <div class="gc-emoji">🔚</div>
+      <div class="gc-title">Ending Sound</div>
+      <div class="gc-desc">Which word ends with the same sound?</div>
+      <div class="gc-level">Pre-K · Level 1</div>
+    </div>
+
+    <div class="game-card" onclick="startGame('blend')">
+      <div class="gc-emoji">🔗</div>
+      <div class="gc-title">Blend It!</div>
+      <div class="gc-desc">Hear the sounds, find the word!</div>
+      <div class="gc-level">Kinder · Level 2</div>
+    </div>
+
+    <div class="game-card" onclick="startGame('rhyme')">
+      <div class="gc-emoji">🎵</div>
+      <div class="gc-title">Rhyme Time</div>
+      <div class="gc-desc">Which word rhymes? (same ending sound)</div>
+      <div class="gc-level">Pre-K · Level 1</div>
+    </div>
+
+    <div class="game-card" onclick="startGame('vowelSort')">
+      <div class="gc-emoji">🥚</div>
+      <div class="gc-title">Vowel Egg Sort</div>
+      <div class="gc-desc">Sort words by their vowel sound!</div>
+      <div class="gc-level">Kinder · Level 2</div>
+    </div>
+
+    <div class="game-card" onclick="startGame('consonantBlend')">
+      <div class="gc-emoji">🌟</div>
+      <div class="gc-title">Blends: pl bl tr fr</div>
+      <div class="gc-desc">Hear the blend, pick the right one!</div>
+      <div class="gc-level">Grade 1 · Level 3</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ GAME AREA ══════ -->
+<div id="gameArea">
+  <div class="game-header">
+    <button class="back-btn" onclick="goMenu()">← Menu</button>
+    <div class="game-title" id="gameTitle">Game</div>
+    <div style="font-weight:900;color:var(--coral)" id="scoreDisp">0 / 0</div>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div id="questionArea"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// PHONICS AUDIO ENGINE
+// Uses pre-synthesised WAV files (base64 encoded)
+// loaded from phonemes.js — NO TTS, correct phonics sounds
+// ══════════════════════════════════════════════════════
+
+let audioCtx = null;
+const audioCache = {};   // decoded AudioBuffer cache
+
+function getAudioCtx(){
+  if(!audioCtx){
+    try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+  }
+  return audioCtx;
+}
+
+// Decode a base64 WAV string into an AudioBuffer
+async function decodePhoneme(key){
+  if(audioCache[key]) return audioCache[key];
+  const b64 = (typeof PHONEME_AUDIO !== 'undefined') ? PHONEME_AUDIO[key] : null;
+  if(!b64) return null;
+  const ctx = getAudioCtx();
+  if(!ctx) return null;
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  try {
+    const buf = await ctx.decodeAudioData(bytes.buffer.slice(0));
+    audioCache[key] = buf;
+    return buf;
+  } catch(e){ return null; }
+}
+
+// Play a single phoneme key, call cb when done
+async function playPhoneme(key, cb){
+  showSoundLabel(key);
+  const buf = await decodePhoneme(key);
+  if(!buf){ setTimeout(()=>cb&&cb(), 200); return; }
+  const ctx = getAudioCtx();
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  // Slight pitch shift for more child-friendly tone
+  src.playbackRate.value = 1.05;
+  const gain = ctx.createGain();
+  gain.gain.value = 1.4;
+  src.connect(gain); gain.connect(ctx.destination);
+  src.onended = ()=>cb&&cb();
+  src.start();
+}
+
+// Play phonemes one by one with a gap
+function playPhonemes(keys, cb){
+  let i=0;
+  function next(){
+    if(i>=keys.length){cb&&cb();return;}
+    playPhoneme(keys[i++], ()=>setTimeout(next, 280));
+  }
+  next();
+}
+
+// Play a sequence, then play the blended word via TTS
+function playPhonemesAndBlend(keys, word, cb){
+  playPhonemes(keys, ()=>{
+    setTimeout(()=>speakWord(word, cb), 400);
+  });
+}
+
+// Speak a full word using TTS (words sound fine in TTS, only phonemes are wrong)
+function speakWord(word, cb){
+  if(!('speechSynthesis' in window)){ cb&&cb(); return; }
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(word);
+    u.rate=0.78; u.pitch=1.05; u.lang='en-US';
+    u.onend=()=>cb&&cb();
+    u.onerror=()=>cb&&cb();
+    speechSynthesis.speak(u);
+  } catch(e){ cb&&cb(); }
+}
+
+// Show phoneme label bubble on screen
+function showSoundLabel(key){
+  const labels = {
+    a:'/æ/ (cat)', e:'/ɛ/ (bed)', i:'/ɪ/ (sit)', o:'/ɒ/ (hot)', u:'/ʌ/ (cup)',
+    A:'/eɪ/ (cake)', E:'/iː/ (tree)', I:'/aɪ/ (kite)', O:'/oʊ/ (boat)', U:'/uː/ (moon)',
+    b:'/b/', c:'/k/', d:'/d/', f:'/f/', g:'/g/', h:'/h/', j:'/j/', k:'/k/',
+    l:'/l/', m:'/m/', n:'/n/', p:'/p/', r:'/r/', s:'/s/', t:'/t/', v:'/v/',
+    w:'/w/', x:'/ks/', y:'/y/', z:'/z/',
+    sh:'/ʃ/ sh', ch:'/tʃ/ ch', th:'/θ/ th', ng:'/ŋ/ ng', ph:'/f/ ph', ck:'/k/ ck',
+    bl:'bl', cl:'cl', fl:'fl', gl:'gl', pl:'pl', sl:'sl',
+    br:'br', cr:'cr', dr:'dr', fr:'fr', gr:'gr', pr:'pr', tr:'tr',
+    sc:'sc', sk:'sk', sm:'sm', sn:'sn', sp:'sp', st:'st', sw:'sw',
+    ai:'/eɪ/ ai', ay:'/eɪ/ ay', ea:'/iː/ ea', ee:'/iː/ ee', ie:'/aɪ/ ie',
+    oa:'/oʊ/ oa', oo:'/uː/ oo', ou:'/aʊ/ ou', ow:'/aʊ/ ow',
+    oi:'/ɔɪ/ oi', oy:'/ɔɪ/ oy', ar:'/ɑː/ ar', er:'/ɜː/ er',
+    ir:'/ɜː/ ir', ur:'/ɜː/ ur', or:'/ɔː/ or', aw:'/ɔː/ aw',
+  };
+  let lbl = document.getElementById('soundLabelBubble');
+  if(!lbl){
+    lbl = document.createElement('div');
+    lbl.id = 'soundLabelBubble';
+    lbl.style.cssText = 'position:fixed;top:76px;left:50%;transform:translateX(-50%);background:#C77DFF;color:white;font-family:Nunito,sans-serif;font-size:1.4rem;font-weight:900;padding:10px 24px;border-radius:30px;box-shadow:0 6px 20px rgba(0,0,0,0.25);z-index:9999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap';
+    document.body.appendChild(lbl);
+  }
+  lbl.textContent = '🔊 ' + (labels[key]||key);
+  lbl.style.opacity='1';
+  clearTimeout(lbl._t);
+  lbl._t = setTimeout(()=>lbl.style.opacity='0', 1600);
+}
+
+// Resume AudioContext on first user interaction (required by browsers)
+document.addEventListener('click', ()=>{ const c=getAudioCtx(); if(c&&c.state==='suspended') c.resume(); }, {once:false});
+
+// ── Legacy TTS wrapper for full words only ──
+function tts(text, rate=0.85, pitch=1.05, cb){ speakWord(text, cb); }
+function sayPhoneme(key, cb){ playPhoneme(key, cb); }
+function sayWord(word, cb){ speakWord(word, cb); }
+function sayWordByPhonemes(phonemes, cb){ playPhonemes(phonemes, cb); }
+
+
+// ══════════════════════════════════════════════════════
+// GAME DATA
+// ══════════════════════════════════════════════════════
+
+// Words with emoji and phoneme breakdown
+const WORDS = {
+  cat:  {e:'🐱', ph:['c','a','t'],   blend:'cl'},
+  dog:  {e:'🐶', ph:['d','o','g']},
+  sun:  {e:'☀️', ph:['s','u','n']},
+  bus:  {e:'🚌', ph:['b','u','s']},
+  cup:  {e:'☕', ph:['c','u','p']},
+  hat:  {e:'🎩', ph:['h','a','t']},
+  hen:  {e:'🐔', ph:['h','e','n']},
+  bed:  {e:'🛏️', ph:['b','e','d']},
+  pig:  {e:'🐷', ph:['p','i','g']},
+  fin:  {e:'🐠', ph:['f','i','n']},
+  hop:  {e:'🐸', ph:['h','o','p']},
+  mop:  {e:'🧹', ph:['m','o','p']},
+  jet:  {e:'✈️', ph:['j','e','t']},
+  lip:  {e:'👄', ph:['l','i','p']},
+  map:  {e:'🗺️', ph:['m','a','p']},
+  net:  {e:'🏸', ph:['n','e','t']},
+  pop:  {e:'🍭', ph:['p','o','p']},
+  rug:  {e:'🪣', ph:['r','u','g']},
+  van:  {e:'🚐', ph:['v','a','n']},
+  web:  {e:'🕸️', ph:['w','e','b']},
+  zip:  {e:'🤐', ph:['z','i','p']},
+  fox:  {e:'🦊', ph:['f','o','x']},
+  log:  {e:'🪵', ph:['l','o','g']},
+  mud:  {e:'💩', ph:['m','u','d']},
+  six:  {e:'6️⃣', ph:['s','i','x']},
+  ten:  {e:'🔟', ph:['t','e','n']},
+  peg:  {e:'📌', ph:['p','e','g']},
+  // digraph words
+  shop: {e:'🛍️', ph:['sh','o','p']},
+  chip: {e:'🍟', ph:['ch','i','p']},
+  fish: {e:'🐟', ph:['f','i','sh']},
+  dish: {e:'🍽️', ph:['d','i','sh']},
+  chat: {e:'💬', ph:['ch','a','t']},
+  thin: {e:'🌿', ph:['th','i','n']},
+  ship: {e:'🚢', ph:['sh','i','p']},
+  chin: {e:'😊', ph:['ch','i','n']},
+  // blend words
+  plan: {e:'📋', ph:['pl','a','n'],  blend:'pl'},
+  play: {e:'🎮', ph:['pl','A'],      blend:'pl'},
+  flag: {e:'🚩', ph:['fl','a','g'],  blend:'fl'},
+  frog: {e:'🐸', ph:['fr','o','g'],  blend:'fr'},
+  trip: {e:'🚶', ph:['tr','i','p'],  blend:'tr'},
+  tree: {e:'🌳', ph:['tr','E'],      blend:'tr'},
+  drop: {e:'💧', ph:['dr','o','p'],  blend:'dr'},
+  drum: {e:'🥁', ph:['dr','u','m'],  blend:'dr'},
+  clap: {e:'👏', ph:['cl','a','p'],  blend:'cl'},
+  club: {e:'🪃', ph:['cl','u','b'],  blend:'cl'},
+  blob: {e:'🫧', ph:['bl','o','b'],  blend:'bl'},
+  blue: {e:'🔵', ph:['bl','U'],      blend:'bl'},
+  grab: {e:'🤏', ph:['gr','a','b'],  blend:'gr'},
+  grin: {e:'😁', ph:['gr','i','n'],  blend:'gr'},
+  snap: {e:'📸', ph:['sn','a','p'],  blend:'sn'},
+  snag: {e:'🎣', ph:['sn','a','g'],  blend:'sn'},
+  step: {e:'👣', ph:['st','e','p'],  blend:'st'},
+  // Extra words used in blend game options
+  free:  {e:'🆓', ph:['fr','ee']},
+  three: {e:'3️⃣', ph:['th','r','ee']},
+  car:   {e:'🚗', ph:['c','ar']},
+  bar:   {e:'🎸', ph:['b','ar']},
+  tip:   {e:'☝️', ph:['t','i','p']},
+  blog:  {e:'💻', ph:['bl','o','g']},
+  drop:  {e:'💧', ph:['dr','o','p']},
+  flag:  {e:'🚩', ph:['fl','a','g']},
+  crab:  {e:'🦀', ph:['cr','a','b']},
+  drab:  {e:'😑', ph:['dr','a','b']},
+  glue:  {e:'🫧', ph:['gl','oo']},
+  blue:  {e:'🔵', ph:['bl','oo']},
+  clue:  {e:'🔍', ph:['cl','oo']},
+  flap:  {e:'🐦', ph:['fl','a','p']},
+  trap:  {e:'🪤', ph:['tr','a','p']},
+  thin:  {e:'🌿', ph:['th','i','n']},
+  pin:   {e:'📌', ph:['p','i','n']},
+  star: {e:'⭐', ph:['st','ar'],     blend:'st'},
+  spin: {e:'🌀', ph:['sp','i','n'],  blend:'sp'},
+  spot: {e:'🔵', ph:['sp','o','t'],  blend:'sp'},
+};
+
+// ── GAME 1: First Sound ──
+const FIRST_SOUND_Q = [
+  {sound:'s', words:['sun','cat','pig'],  answer:'sun'},
+  {sound:'b', words:['bus','hen','fox'],  answer:'bus'},
+  {sound:'c', words:['hat','cat','bed'],  answer:'cat'},
+  {sound:'d', words:['van','map','dog'],  answer:'dog'},
+  {sound:'f', words:['fish','cup','log'], answer:'fish'},
+  {sound:'h', words:['hop','jet','mud'],  answer:'hop'},
+  {sound:'m', words:['mop','rug','ten'],  answer:'mop'},
+  {sound:'p', words:['six','pig','web'],  answer:'pig'},
+  {sound:'r', words:['net','rug','pop'],  answer:'rug'},
+  {sound:'sh',words:['ship','cat','dog'], answer:'ship'},
+  {sound:'ch',words:['hat','chip','sun'], answer:'chip'},
+  {sound:'t', words:['bus','van','ten'],  answer:'ten'},
+  {sound:'v', words:['map','van','sun'],  answer:'van'},
+  {sound:'z', words:['cup','zip','hen'],  answer:'zip'},
+];
+
+// ── GAME 2: Last Sound ──
+const LAST_SOUND_Q = [
+  {sound:'t', words:['hat','dog','bus'],  answer:'hat'},
+  {sound:'g', words:['cat','dog','sun'],  answer:'dog'},
+  {sound:'n', words:['bus','van','fox'],  answer:'van'},
+  {sound:'p', words:['cup','net','dog'],  answer:'cup'},
+  {sound:'sh',words:['dog','dish','bus'], answer:'dish'},
+  {sound:'sh',words:['cup','fish','hat'], answer:'fish'},
+  {sound:'d', words:['mud','cat','fox'],  answer:'mud'},
+  {sound:'g', words:['fox','log','sun'],  answer:'log'},
+  {sound:'b', words:['cat','web','sun'],  answer:'web'},
+  {sound:'x', words:['fox','mud','bus'],  answer:'fox'},
+  {sound:'p', words:['map','bus','hen'],  answer:'map'},
+  {sound:'t', words:['net','dog','van'],  answer:'net'},
+];
+
+// ── GAME 3: Blend It (hear phonemes → pick word) ──
+// phonemes use proper tokens: digraphs and blends as single units
+const BLEND_Q = [
+  {phonemes:['c','a','t'],   options:['cat','dog','hat'],    answer:'cat'},
+  {phonemes:['d','o','g'],   options:['bus','dog','log'],    answer:'dog'},
+  {phonemes:['sh','i','p'],  options:['chip','fish','ship'], answer:'ship'},
+  {phonemes:['ch','i','p'],  options:['chip','ship','tip'],  answer:'chip'},
+  {phonemes:['fr','o','g'],  options:['frog','blog','drop'], answer:'frog'},
+  {phonemes:['pl','a','n'],  options:['plan','clap','flag'], answer:'plan'},
+  {phonemes:['tr','ee'],     options:['tree','free','three'],answer:'tree'},
+  {phonemes:['st','ar'],     options:['car','star','bar'],   answer:'star'},
+  {phonemes:['dr','u','m'],  options:['drum','drop','grab'], answer:'drum'},
+  {phonemes:['sn','a','p'],  options:['snap','clap','trap'], answer:'snap'},
+  {phonemes:['cl','a','p'],  options:['clap','snap','flap'], answer:'clap'},
+  {phonemes:['sp','i','n'],  options:['pin','spin','thin'],  answer:'spin'},
+  {phonemes:['fl','a','g'],  options:['flag','plan','clap'], answer:'flag'},
+  {phonemes:['gr','a','b'],  options:['crab','grab','drab'], answer:'grab'},
+  {phonemes:['bl','oo'],     options:['glue','blue','clue'], answer:'blue'},
+  {phonemes:['st','e','p'],  options:['step','snap','spin'], answer:'step'},
+];
+
+// ── GAME 4: Rhyme ──
+const RHYME_Q = [
+  {word:'cat', options:['hat','dog','bus'],   answer:'hat',   rhymeSound:'at'},
+  {word:'sun', options:['cup','fun','ship'],   answer:'fun',   rhymeSound:'un', funE:'🌞'},
+  {word:'hop', options:['log','mop','fish'],   answer:'mop',   rhymeSound:'op'},
+  {word:'bed', options:['hat','red','bus'],    answer:'red',   rhymeSound:'ed', funE:'🔴'},
+  {word:'pig', options:['big','dog','sun'],    answer:'big',   rhymeSound:'ig', funE:'🐘'},
+  {word:'van', options:['bus','can','fox'],    answer:'can',   rhymeSound:'an', funE:'🥫'},
+  {word:'web', options:['mud','cup','cob'],    answer:'cob',   rhymeSound:'ob', funE:'🌽'},
+  {word:'fish', options:['dish','dog','cup'],  answer:'dish',  rhymeSound:'ish'},
+  {word:'ship', options:['hat','chip','dog'],  answer:'chip',  rhymeSound:'ip'},
+  {word:'plan', options:['van','log','bus'],   answer:'van',   rhymeSound:'an'},
+  {word:'tree', options:['bus','free','hat'],  answer:'free',  rhymeSound:'ee', funE:'🆓'},
+  {word:'star', options:['cup','car','mud'],   answer:'car',   rhymeSound:'ar', funE:'🚗'},
+];
+
+// ── GAME 5: Vowel Sort (short a/i/o/u/e) ──
+const VOWEL_SORT_ROUNDS = [
+  { buckets:[{v:'a',e:'🍎',label:'short a (cat)'},{v:'i',e:'🐷',label:'short i (pig)'}],
+    words:['cat','van','map','hat','pig','lip','zip','fin'] },
+  { buckets:[{v:'o',e:'🐸',label:'short o (hop)'},{v:'u',e:'🚌',label:'short u (bus)'}],
+    words:['hop','log','fox','mop','bus','cup','mud','rug'] },
+  { buckets:[{v:'e',e:'🛏️',label:'short e (bed)'},{v:'a',e:'🎩',label:'short a (hat)'}],
+    words:['bed','hen','net','web','hat','van','cat','map'] },
+];
+
+// ── GAME 6: Consonant Blends ──
+const BLEND_ID_Q = [
+  {blend:'pl', options:['pl','fl','cl'], words:['plan','flag','clap'], answer:'pl'},
+  {blend:'fl', options:['pl','fl','bl'], words:['plan','flag','blob'], answer:'fl'},
+  {blend:'tr', options:['fr','tr','dr'], words:['frog','trip','drop'], answer:'tr'},
+  {blend:'fr', options:['fr','tr','gr'], words:['frog','tree','grab'], answer:'fr'},
+  {blend:'bl', options:['pl','fl','bl'], words:['plan','flag','blue'], answer:'bl'},
+  {blend:'cl', options:['cl','sl','gl'], words:['clap','club','blob'], answer:'cl'},
+  {blend:'gr', options:['gr','cr','tr'], words:['grab','grin','tree'], answer:'gr'},
+  {blend:'sn', options:['sn','st','sp'], words:['snap','step','spin'], answer:'sn'},
+  {blend:'st', options:['sn','st','sp'], words:['snap','step','spin'], answer:'st'},
+  {blend:'sp', options:['sn','st','sp'], words:['snap','step','spin'], answer:'sp'},
+  {blend:'dr', options:['dr','tr','fr'], words:['drum','trip','frog'], answer:'dr'},
+  {blend:'pl', options:['pl','bl','cl'], words:['plan','blue','clap'], answer:'pl'},
+];
+
+// ══════════════════════════════════════════════════════
+// GAME ENGINE
+// ══════════════════════════════════════════════════════
+let currentGame='', questions=[], qIdx=0, score=0, totalQ=0;
+let totalStars=0, totalCorrect=0;
+let answered=false;
+
+function goMenu(){
+  document.getElementById('gameMenu').style.display='block';
+  document.getElementById('gameArea').style.display='none';
+  speechSynthesis.cancel();
+}
+
+function startGame(name){
+  currentGame=name; qIdx=0; score=0; answered=false;
+  document.getElementById('gameMenu').style.display='none';
+  document.getElementById('gameArea').style.display='block';
+
+  const titles={
+    firstSound:'👂 First Sound Hunt',
+    lastSound:'🔚 Ending Sound',
+    blend:'🔗 Blend It!',
+    rhyme:'🎵 Rhyme Time',
+    vowelSort:'🥚 Vowel Egg Sort',
+    consonantBlend:'🌟 Consonant Blends',
+  };
+  document.getElementById('gameTitle').textContent=titles[name];
+
+  // Shuffle and pick questions
+  if(name==='firstSound')    questions=shuffle([...FIRST_SOUND_Q]).slice(0,8);
+  else if(name==='lastSound')questions=shuffle([...LAST_SOUND_Q]).slice(0,8);
+  else if(name==='blend')    questions=shuffle([...BLEND_Q]).slice(0,8);
+  else if(name==='rhyme')    questions=shuffle([...RHYME_Q]).slice(0,8);
+  else if(name==='vowelSort')questions=[...VOWEL_SORT_ROUNDS];
+  else if(name==='consonantBlend') questions=shuffle([...BLEND_ID_Q]).slice(0,8);
+  totalQ=questions.length;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  if(qIdx>=questions.length){ showResults(); return; }
+  answered=false;
+  const pct=(qIdx/totalQ)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('scoreDisp').textContent=score+' / '+qIdx;
+
+  const q=questions[qIdx];
+  const area=document.getElementById('questionArea');
+
+  if(currentGame==='firstSound')   area.innerHTML=renderFirstSound(q);
+  else if(currentGame==='lastSound')area.innerHTML=renderLastSound(q);
+  else if(currentGame==='blend')    area.innerHTML=renderBlend(q);
+  else if(currentGame==='rhyme')    area.innerHTML=renderRhyme(q);
+  else if(currentGame==='vowelSort')area.innerHTML=renderVowelSort(q);
+  else if(currentGame==='consonantBlend') area.innerHTML=renderConsonantBlend(q);
+
+  // Auto-play the question prompt after a short delay
+  setTimeout(()=>autoPlay(q), 400);
+}
+
+function autoPlay(q){
+  if(currentGame==='firstSound'){
+    tts('Listen! What starts with this sound?',0.82,1.05,()=>{
+      setTimeout(()=>sayPhoneme(q.sound),400);
+    });
+  } else if(currentGame==='lastSound'){
+    tts('Which word ends with this sound?',0.82,1.05,()=>{
+      setTimeout(()=>sayPhoneme(q.sound),400);
+    });
+  } else if(currentGame==='blend'){
+    tts('Blend the sounds together! What word is it?',0.82,1.05,()=>{
+      setTimeout(()=>sayWordByPhonemes(q.phonemes),400);
+    });
+  } else if(currentGame==='rhyme'){
+    tts('Which word rhymes with: '+q.word,0.78,1.05);
+  } else if(currentGame==='vowelSort'){
+    tts('Sort the words by their vowel sound! Tap a word, then tap the right bucket.',0.82,1.05);
+  } else if(currentGame==='consonantBlend'){
+    tts('Listen to the blend sound!',0.82,1.05,()=>{
+      setTimeout(()=>sayPhoneme(q.blend),500);
+    });
+  }
+}
+
+// ── RENDER FUNCTIONS ──
+
+function renderFirstSound(q){
+  return `
+    <div class="q-card">
+      <div class="q-instruction">Listen to the sound 👂</div>
+      <button class="q-play-btn" onclick="sayPhoneme('${q.sound}')">🔊</button>
+      <div class="q-label">Tap 🔊 to hear the sound again</div>
+    </div>
+    <div class="q-instruction" style="text-align:center;font-size:1rem;font-weight:900;margin-bottom:12px">
+      Which word STARTS with that sound?
+    </div>
+    <div class="choices col3">
+      ${q.words.map(w=>`
+        <button class="choice-btn" onclick="checkFirst(this,'${w}','${q.answer}')">
+          <span class="ce">${WORDS[w]?.e||'❓'}</span>
+          <span class="cw">${w}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next ➡️</button>
+  `;
+}
+
+function renderLastSound(q){
+  return `
+    <div class="q-card">
+      <div class="q-instruction">Listen to the ENDING sound 🔚</div>
+      <button class="q-play-btn" onclick="sayPhoneme('${q.sound}')">🔊</button>
+      <div class="q-label">Which word ENDS with this sound?</div>
+    </div>
+    <div class="choices col3">
+      ${q.words.map(w=>`
+        <button class="choice-btn" onclick="checkAnswer(this,'${w}','${q.answer}')">
+          <span class="ce">${WORDS[w]?.e||'❓'}</span>
+          <span class="cw">${w}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next ➡️</button>
+  `;
+}
+
+function renderBlend(q){
+  // Determine block type for each phoneme token
+  const DIGRAPHS = new Set(['sh','ch','th','ph','wh','ng','ck','qu','ai','ay','ea','ee','ie','oa','oo','ou','ow','oi','oy','ue','ar','er','ir','or','ur','aw','au']);
+  const BLENDS   = new Set(['bl','cl','fl','gl','pl','sl','br','cr','dr','fr','gr','pr','tr','sc','sk','sm','sn','sp','st','sw']);
+  const blocks = q.phonemes.map(ph=>{
+    let cls;
+    if(ph.length===1 && 'aeiouAEIOU'.includes(ph)) cls='bl-vowel';
+    else if(DIGRAPHS.has(ph.toLowerCase()))         cls='bl-dig';
+    else if(BLENDS.has(ph.toLowerCase()))           cls='bl-dig' ; // purple for blends too
+    else                                            cls='bl-cons';
+    return '<span class="blend-letter '+cls+'">'+ph+'</span>';
+  }).join('<span class="blend-sep">+</span>');
+
+  return `
+    <div class="q-card">
+      <div class="q-instruction">Hear the sounds, blend them! 🔗</div>
+      <div class="blend-display">${blocks}</div>
+      <button class="q-play-btn" onclick="sayWordByPhonemes(${JSON.stringify(q.phonemes)})">🔊</button>
+      <div class="q-label">Tap to hear the sounds again</div>
+    </div>
+    <div class="choices col3">
+      ${q.options.map(w=>`
+        <button class="choice-btn" onclick="checkAnswer(this,'${w}','${q.answer}')">
+          <span class="ce">${WORDS[w]?.e||'❓'}</span>
+          <span class="cw">${w}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next ➡️</button>
+  `;
+}
+
+function renderRhyme(q){
+  const we = WORDS[q.word]?.e || '🔤';
+  return `
+    <div class="q-card">
+      <div class="q-instruction">🎵 Which word RHYMES?</div>
+      <div class="rhyme-word">${we} ${q.word}</div>
+      <button class="q-play-btn" onclick="sayWord('${q.word}')">🔊</button>
+      <div class="q-label">Same ending sound as: <strong>${q.word}</strong></div>
+    </div>
+    <div class="choices col3">
+      ${q.options.map(w=>`
+        <button class="choice-btn" onclick="checkAnswer(this,'${w}','${q.answer}')">
+          <span class="ce">${WORDS[w]?.e || q.options.find(x=>x===w) && '🔤'}</span>
+          <span class="cw">${w}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next ➡️</button>
+  `;
+}
+
+// Vowel sort — drag/tap to bucket
+let sortPending = null;
+function renderVowelSort(q){
+  const buckets=q.buckets;
+  const words=shuffle([...q.words]);
+  return `
+    <div class="q-card" style="padding:16px">
+      <div class="q-instruction">Sort by vowel sound! 🥚</div>
+      <div class="sort-area" id="sortArea">
+        ${buckets.map((b,i)=>`
+          <div class="sort-bucket" id="bucket${i}" onclick="dropToBucket(${i})">
+            <div class="bucket-emoji">${b.e}</div>
+            <div class="bucket-label">${b.label}</div>
+            <div id="bucketContent${i}"></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="word-tokens" id="wordTokens">
+        ${words.map(w=>`
+          <button class="word-token" id="tok_${w}" onclick="selectToken('${w}')">
+            ${WORDS[w]?.e||''} ${w}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next ➡️</button>
+  `;
+}
+
+const sortState={};
+function selectToken(word){
+  // Highlight selected
+  document.querySelectorAll('.word-token').forEach(t=>t.style.outline='none');
+  const tok=document.getElementById('tok_'+word);
+  if(tok){ tok.style.outline='3px solid var(--purple)'; }
+  sortPending=word;
+  sayWord(word);
+}
+function dropToBucket(bIdx){
+  if(!sortPending)return;
+  const word=sortPending; sortPending=null;
+  const q=questions[qIdx];
+  const bucket=q.buckets[bIdx];
+  const vowelMap={'a':'a','e':'e','i':'i','o':'o','u':'u'};
+  // Find the short vowel in the word
+  const wordPhonemes = WORDS[word]?.ph || [];
+  const wordVowel = wordPhonemes.find(p=>vowelMap[p]);
+  const correct = wordVowel===bucket.v;
+
+  // Remove token from pile
+  const tok=document.getElementById('tok_'+word);
+  if(tok) tok.style.display='none';
+
+  // Add to bucket
+  const bc=document.getElementById('bucketContent'+bIdx);
+  const span=document.createElement('span');
+  span.className='sorted-word';
+  span.style.background=correct?'#dcfce7':'#fee2e2';
+  span.style.color=correct?'#16a34a':'#dc2626';
+  span.textContent=(WORDS[word]?.e||'')+' '+word;
+  bc.appendChild(span);
+
+  if(correct){ score++; totalCorrect++; tts('Yes! '+word+' has the '+bucket.v+' sound!',0.82); }
+  else { tts('Oops! '+word+' goes in the other bucket.',0.82); }
+
+  // Check if all placed
+  const remaining=document.querySelectorAll('.word-token:not([style*="display: none"])');
+  if(remaining.length===0){
+    document.getElementById('nextBtn').classList.add('show');
+    document.getElementById('scoreDisp').textContent=score+' / '+(qIdx+1);
+  }
+}
+
+function renderConsonantBlend(q){
+  const blendWord = WORDS[q.words[q.options.indexOf(q.blend)]] || {};
+  return `
+    <div class="q-card">
+      <div class="q-instruction">🌟 Which blend do you hear?</div>
+      <button class="q-play-btn" onclick="sayPhoneme('${q.blend}')">🔊</button>
+      <div class="q-label">Tap to hear the blend sound again</div>
+    </div>
+    <div class="choices col3">
+      ${q.options.map(b=>`
+        <button class="choice-btn" onclick="checkAnswer(this,'${b}','${q.answer}')">
+          <span class="ce" style="font-size:1.8rem;font-weight:900;color:var(--purple)">${b}</span>
+          <span class="cw" style="font-size:0.85rem;color:#888">${WORDS[q.words[q.options.indexOf(b)]]?.e||''} ${q.words[q.options.indexOf(b)]||''}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next ➡️</button>
+  `;
+}
+
+// ── ANSWER CHECKING ──
+function checkFirst(btn, chosen, answer){
+  if(answered)return;
+  // Also check: does chosen word start with the sound of q.sound?
+  checkAnswer(btn, chosen, answer);
+}
+
+function checkAnswer(btn, chosen, answer){
+  if(answered)return;
+  answered=true;
+  const allBtns=document.querySelectorAll('.choice-btn');
+  allBtns.forEach(b=>b.disabled=true);
+  const fb=document.getElementById('fb');
+  const nextBtn=document.getElementById('nextBtn');
+
+  if(chosen===answer){
+    btn.classList.add('correct');
+    score++; totalCorrect++;
+    fb.className='feedback correct show';
+    fb.textContent='🌟 Yes! Great job!';
+    tts('Yes! '+answer+'! Wonderful!',0.82,1.1);
+    addStar();
+  } else {
+    btn.classList.add('wrong');
+    // Highlight correct
+    allBtns.forEach(b=>{ if(b.querySelector('.cw')?.textContent.trim()===answer) b.classList.add('correct'); });
+    fb.className='feedback wrong show';
+    fb.textContent='Not quite! The answer is: '+answer;
+    tts('Not quite! The answer is '+answer,0.82,1.0);
+  }
+  document.getElementById('scoreDisp').textContent=score+' / '+(qIdx+1);
+  nextBtn.classList.add('show');
+}
+
+function nextQ(){
+  qIdx++;
+  renderQuestion();
+}
+
+function addStar(){
+  totalStars++;
+  document.getElementById('totalStars').textContent=totalStars;
+  document.getElementById('totalCorrect').textContent=totalCorrect;
+  // Mini celebration
+  const s=document.createElement('span');
+  s.textContent='⭐';
+  s.style.cssText='position:fixed;font-size:2rem;pointer-events:none;animation:floatStar 1s ease forwards;z-index:999;top:60px;left:'+(30+Math.random()*60)+'%';
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(),1000);
+}
+
+function showResults(){
+  const pct=Math.round((score/totalQ)*100);
+  let trophy='🥉',msg='Good try! Play again to improve!';
+  if(pct>=90){trophy='🏆';msg='Amazing! You are a star!';}
+  else if(pct>=70){trophy='🥇';msg='Great job! You are doing brilliantly!';}
+  else if(pct>=50){trophy='🥈';msg='Good work! Keep practising!';}
+
+  const starsEarned = pct>=90?3:pct>=70?2:pct>=50?1:0;
+  const starsHtml = Array.from({length:3},(_,i)=>`<span class="star-earned" style="animation-delay:${i*0.15}s">${i<starsEarned?'⭐':'☆'}</span>`).join('');
+
+  document.getElementById('questionArea').innerHTML=`
+    <div class="results">
+      <div class="trophy">${trophy}</div>
+      <h2>${msg}</h2>
+      <div class="score-text">You got <strong>${score} out of ${totalQ}</strong> correct! (${pct}%)</div>
+      <div class="stars-earned">${starsHtml}</div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
+        <button class="btn btn-coral" onclick="startGame('${currentGame}')">🔄 Play Again</button>
+        <button class="btn btn-purple" onclick="goMenu()">🏠 Choose Game</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('progressFill').style.width='100%';
+  tts(msg+' You got '+score+' out of '+totalQ+'!',0.82);
+}
+
+// ── UTILS ──
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+// Float star animation
+const styleEl=document.createElement('style');
+styleEl.textContent='@keyframes floatStar{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.5)}}';
+document.head.appendChild(styleEl);
+</script>
+</body>
+</html>
